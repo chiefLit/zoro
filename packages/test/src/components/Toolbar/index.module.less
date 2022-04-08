@@ -1,0 +1,40 @@
+.toolbarWrapper {
+  padding: 12px;
+  background: transparent;
+  font-size: 13px;
+  color: #17181a;
+  display: flex;
+  pointer-events: none;
+  justify-content: space-between;
+  .left {
+    display: flex;
+    pointer-events: auto;
+  }
+  .right {
+    display: flex;
+    pointer-events: auto;
+  }
+  .item {
+    background-color: #fff;
+    border: 1px solid rgba(235, 237, 240, 1);
+    border-radius: 2px;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 12px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    // cursor: pointer;
+    :global {
+      .anticon {
+        cursor: pointer;
+        font-size: 16px;
+        width: 30px;
+        &:hover {
+          color: rgba(235, 237, 240, 1);
+        }
+      }
+    }
+  }
+}
