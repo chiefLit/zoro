@@ -9,7 +9,15 @@ const useGlobal = (initialState?: IInitialState) => {
   const { moveStageRef } = initialState!
   return {
     ...moveStageRef.current,
-    moveStageRef
+    moveStageRef,
+    typeConfig: {
+      branch: {
+        branch: {}
+      },
+      group: {
+        group: {}
+      },
+    }
   }
 }
 

@@ -42,7 +42,6 @@ const MoveStage = React.forwardRef<MoveStageInstance, MoveStageProps>((props, re
     sceneZoomRef,
     sceneZoom: sceneZoomRef.current,
     getSceneZoom: () => {
-      console.log('%cindex.tsx line:32 sceneZoomRef.current?.value', 'color: #007acc;', sceneZoomRef.current?.value);
       return Math.floor(sceneZoomRef.current?.value)
     }
   }))

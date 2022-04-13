@@ -25,3 +25,12 @@ export interface NodeConfigProps {
 export interface TypeConfigProps {
   [key: React.Key]: any;
 }
+
+export interface IDictionary {
+  [key: React.Key]: any;
+}
+
+export interface PointPosition {
+  x: number;
+  y: number;
+}
