@@ -10,15 +10,22 @@ export type PipelineProps = NodeProps[]
 
 export interface NodeProps {
   id?: string;
-  type?: string;
+  type?: 'normal' | 'group' | 'branch';
   displayName?: string;
   description?: string;
-  config: NodeConfigProps[];
+  config: NodeConfigProps;
   [key: React.Key]: any;
 }
 
 export interface NodeConfigProps {
-  pipeline?: PipelineProps;
+  group?: {
+    pipeline: PipelineProps;
+    [key: React.Key]: any;
+  };    // group
+  branches?: {
+    pipeline: PipelineProps;
+    [key: React.Key]: any;
+  }[]; // branch
   [key: React.Key]: any;
 }
 

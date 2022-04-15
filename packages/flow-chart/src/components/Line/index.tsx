@@ -13,7 +13,7 @@ interface LineProps {
   /**
    * 拐点靠近
    */
-  inflection: 'start' | 'end'
+  inflection?: 'start' | 'end'
 }
 
 /**
@@ -21,7 +21,7 @@ interface LineProps {
  * 拐点贴近起点/终点
  */
 const DrawerLine: React.FC<LineProps> = (props: LineProps) => {
-  const { start, end, inflection } = props;
+  const { start, end, inflection = 'start' } = props;
   const width = Math.abs(end.x - start.x) + 4;
   const height = Math.abs(end.y - start.y) + 3;
   const inflectionY = inflection === 'start' ? start.y + 20 : end.y - 20
@@ -32,14 +32,14 @@ const DrawerLine: React.FC<LineProps> = (props: LineProps) => {
     ${end.x},${end.y}
   `
   return (
-    <svg width={width} height={height} xmlns="http://www.w3.org/2000/svg" version="1.1">
+    <>
       <defs>
         <marker id="Triangle" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto">
           <path d="M0,0 L0,6 L6,3 z" />
         </marker>
       </defs>
       <polyline points={points} fill="none" stroke="black" strokeWidth="1" markerEnd="url(#Triangle)" />
-    </svg>
+    </>
   )
 }
 

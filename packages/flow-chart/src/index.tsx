@@ -1,6 +1,6 @@
 import React from 'react'
 import { GlobalContext } from './context'
-import { MoveStage, Toolbar, MoveStageInstance, NodeBox } from './components'
+import { MoveStage, Toolbar, MoveStageInstance, Pipeline, Config } from './components'
 import './styles/global.less'
 import { IDictionary } from './types'
 import mockData from './mock/flowData'
@@ -27,22 +27,28 @@ const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProp
     },
   }
 
-  const fn = ({ nodeData }: { nodeData: IDictionary }) => {
-    const nodeBox = new NodeBox({ businessData: nodeData, typeConfigs })
-    if (nodeData.children) {
-      nodeBox.setChildren(nodeData.children.map(item => fn({ nodeData: item })))
-    }
-    return nodeBox
-  }
-
-  const nodeBox = fn({ nodeData: { "id": "fRUmvbnvnMS", "type": "end", "displayName": "END", children: mockData } })
+  const pipeline = new Pipeline({ pipelineData: mockData, typeConfigs })
 
   return (
     <GlobalContext.Provider initialState={{ moveStageRef }}>
       <div style={{ width: '100%', height: '100vh', background: 'red' }}>
         <MoveStage header={<Toolbar />} ref={moveStageRef} >
-          {nodeBox.render()}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: pipeline.getWidth() + 'px',
+            height: pipeline.getHeight() + 'px',
+            background: '#ccc',
+            transform: 'translate(-50%, 0)'
+          }}>
+            <svg width={pipeline.getWidth() + 'px'} height={pipeline.getHeight() + 'px'}>
+              {/* {pipeline.renderLine()} */}
+            </svg>
+          </div>
+          {pipeline.render()}
         </MoveStage>
+        <Config />
       </div>
     </GlobalContext.Provider>
   )
