@@ -35,12 +35,12 @@ const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProp
         <MoveStage header={<Toolbar />} ref={moveStageRef} >
           <div style={{
             position: 'absolute',
-            top: 0,
+            top: pipeline.getHeight() / 2,
             left: 0,
             width: pipeline.getWidth() + 'px',
             height: pipeline.getHeight() + 'px',
             background: '#ccc',
-            transform: 'translate(-50%, 0)'
+            transform: 'translate(-50%, -50%)'
           }}>
             <svg width={pipeline.getWidth() + 'px'} height={pipeline.getHeight() + 'px'}>
               {/* {pipeline.renderLine()} */}

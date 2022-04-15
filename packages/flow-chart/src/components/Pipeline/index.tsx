@@ -39,20 +39,16 @@ class Pipeline {
         return brother.getX() + brother.getWidth() / 2 + this.getWidth() / 2
       }
     } else {
-      return - this.getWidth() / 2
+      return 0
     }
   };
 
   public getY = (): number => {
     if (this.parentNodeBox) {
-      if (this.indexInNodeBox === 0) {
-        return this.parentNodeBox.getY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + this.parentNodeBox.node.virtualHeight
-      } else {
-        const brother = this.parentNodeBox.childrenPipelines?.[this.indexInNodeBox - 1]!
-        return brother.getY() - brother.getHeight() / 2 + this.getHeight() / 2
-      }
+      return this.parentNodeBox.getY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + this.parentNodeBox.node.virtualHeight
     } else {
-      return 0
+      // 屏幕的上中点是center 所以需要初始高度
+      return this.getHeight() / 2
     }
   };
 
@@ -65,7 +61,6 @@ class Pipeline {
   };
 
   public render() {
-    console.log('%cindex.tsx line:68 {x: this.getX(), y: this.getY()}', 'color: #007acc;', {x: this.getX(), y: this.getY()});
     return this.childrenNodeBoxs.map(nodeBox => {
       return nodeBox.render()
     })

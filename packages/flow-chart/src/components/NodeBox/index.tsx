@@ -40,7 +40,7 @@ export class NodeBox {
         indexInNodeBox: 0
       })
       this.childrenPipelines = [pipeline]
-    } 
+    }
   }
 
   public parentPipeline: Pipeline;
@@ -101,7 +101,7 @@ export class NodeBox {
 
   public getY = (): number => {
     if (this.indexInPipeline === 0) {
-      return this.parentPipeline.getY() - this.parentPipeline.getHeight()/2 + this.getHeight() / 2
+      return this.parentPipeline.getY() - this.parentPipeline.getHeight() / 2 + this.getHeight() / 2
     } else {
       const brother = this.parentPipeline?.childrenNodeBoxs[this.indexInPipeline - 1]!
       return brother.getY() + brother.getHeight() / 2 + this.getHeight() / 2
