@@ -1,6 +1,8 @@
 import React from "react";
 import { IDictionary } from "../../types";
 import { NodeBox } from "../NodeBox";
+import { withModel } from "hox";
+import { GlobalContext } from '../../context'
 
 interface PipelineProps {
   parentNodeBox?: NodeBox;
@@ -13,22 +15,20 @@ interface PipelineProps {
  * 根据 数据 决定定位
  * 根据 childrenNodeBoxs 决定宽高
  */
-class Pipeline {
-  constructor(params: PipelineProps) {
-    this.pipelineData = params.pipelineData;
-    this.indexInNodeBox = params.indexInNodeBox || 0;
-    if (this.pipelineData) {
-      this.childrenNodeBoxs = this.pipelineData.map((item, index) => {
-        const nodeBox = new NodeBox({ nodeData: item, typeConfigs: params.typeConfigs, parentPipeline: this, indexInPipeline: index });
+class Pipeline extends React.Component<PipelineProps> {
+  constructor(props: PipelineProps) {
+    super(props);
+    if (props.pipelineData) {
+      this.childrenNodeBoxs = props.pipelineData.map((item, index) => {
+        const nodeBox = new NodeBox({ nodeData: item, typeConfigs: props.typeConfigs, parentPipeline: this, indexInPipeline: index });
         return nodeBox
       })
     }
-    this.parentNodeBox = params.parentNodeBox;
   }
-  public indexInNodeBox: number = 0;
-  public parentNodeBox?: NodeBox;
+  public indexInNodeBox: number = this.props.indexInNodeBox || 0;
+  public parentNodeBox?: NodeBox = this.props.parentNodeBox;
   public childrenNodeBoxs: NodeBox[] = [];
-  public pipelineData: IDictionary[];
+  public pipelineData: IDictionary[] = this.props.pipelineData;
 
   public getX = (): number => {
     if (this.parentNodeBox) {

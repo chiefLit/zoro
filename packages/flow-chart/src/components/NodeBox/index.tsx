@@ -14,9 +14,10 @@ interface NodeBoxProps {
 /**
  * 节点盒子
  */
-export class NodeBox {
-  constructor(params: NodeBoxProps) {
-    const { nodeData, typeConfigs, parentPipeline, indexInPipeline } = params
+export class NodeBox extends React.Component<NodeBoxProps> {
+  constructor(props: NodeBoxProps) {
+    super(props);
+    const { nodeData, typeConfigs, parentPipeline, indexInPipeline } = props
     this.node = new Node({ nodeBox: this, nodeData })
     this.nodeData = nodeData;
     this.typeConfig = typeConfigs[nodeData.type]
@@ -24,7 +25,7 @@ export class NodeBox {
     this.parentPipeline = parentPipeline
     this.indexInPipeline = indexInPipeline
     if (this.typeConfig?.branch) {
-      this.childrenPipelines = this.nodeData.config?.branches?.map((item, index) => {
+      this.childrenPipelines = this.nodeData.config?.branches?.map((item: any, index: number) => {
         return new Pipeline({
           parentNodeBox: this,
           pipelineData: item.pipeline,
@@ -110,20 +111,6 @@ export class NodeBox {
 
   public renderLine() {
     this.rootPipeline = this.parentPipeline.parentNodeBox ? this.parentPipeline.parentNodeBox.rootPipeline! : this.parentPipeline!;
-    // const start = this.node.getPositionCoordinate()[0]?.top!
-    // const end = this.node.getPositionCoordinate()[0]?.bottom!
-    // if (this.parentNodeBox === this) {
-    //   // 我是我爹，我没有爸爸
-    //   if (this.myIndex !== 0) {
-    //     // 我不是老大
-    //     const branch = this.parentNodeBox.children[this.myIndex - 1];
-    //     if (branch.typeConfig.branch || branch.typeConfig.group) {
-    //       // 我哥不是单一节点
-    //     } else {
-    //       // 我哥是单一节点
-    //     }
-    //   }
-    // } else {
     let start: PointPosition;
     let end: PointPosition = this.node.getPositionCoordinate()[0]?.top!
     if (this.indexInPipeline === 0) {
@@ -141,14 +128,13 @@ export class NodeBox {
         start = branch.node.getPositionCoordinate()[0]?.bottom!;
       }
     }
-    // }
-    return <>
+    return <g>
       <DrawerLine
         start={{ x: start?.x! + this.rootPipeline.getWidth() / 2, y: start?.y! }}
         end={{ x: end?.x! + this.rootPipeline.getWidth() / 2, y: end?.y! }}
       />
       {this.childrenPipelines.map(item => <>{item.childrenNodeBoxs.map(box => box.renderLine())}</>)}
-    </>
+    </g>
   }
 
   public render() {

@@ -1,24 +1,16 @@
 import React from 'react'
-import { createContainer } from 'unstated-next'
 import { MoveStageInstance } from '../components'
 import { getUniqId } from '../utils'
+import { createModel } from 'hox'
 
-interface IInitialState { moveStageRef: React.RefObject<MoveStageInstance> }
-export interface INodeConfig {
+interface INodeConfig {
   width: number;
   height: number;
-  /**
-   * 横向间距
-   */
-  transverseSpacing: number
-  /**
-   * 纵向间距
-   */
+  transverseSpacing: number;
   longitudinalSpacing: number
 }
 
-const useGlobal = (initialState?: IInitialState) => {
-  const { moveStageRef } = initialState!
+const useGlobal = () => {
   const [nodeConfig, setNodeConfig] = React.useState<INodeConfig>({
     width: 200,
     height: 100,
@@ -27,21 +19,11 @@ const useGlobal = (initialState?: IInitialState) => {
   })
 
   return {
-    ...moveStageRef.current,
-    moveStageRef,
     nodeConfig,
     setNodeConfig,
-    typeConfig: {
-      branch: {
-        branch: {}
-      },
-      group: {
-        group: {}
-      },
-    }
   }
 }
 
-const GlobalContext = createContainer(useGlobal)
+const GlobalContext = createModel(useGlobal)
 
 export { GlobalContext }

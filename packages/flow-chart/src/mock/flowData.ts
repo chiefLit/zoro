@@ -14,12 +14,21 @@ export default [
           pipeline: [
             {
               "id": "aHty12D",
+              "type": "query1",
+              "displayName": "findAll"
+            }
+          ]
+        },
+        {
+          pipeline: [
+            {
+              "id": "aHty12D",
               "type": "query",
               "displayName": "findAll"
             },
             {
               "id": "aH1ty2D",
-              "type": "query",
+              "type": "query1",
               "displayName": "findAll"
             }
           ]
@@ -52,62 +61,6 @@ export default [
         },
       ]
     }
-    // children: [
-    //   {
-    //     "id": "aHty1232123D",
-    //     "type": "query",
-    //     "displayName": "findAll"
-    //   },
-    //   {
-    //     "id": "123123",
-    //     "type": "group",
-    //     "displayName": "findAll",
-    //     children: [
-    //       {
-    //         "id": "qweqwe",
-    //         "type": "query",
-    //         "displayName": "findAll"
-    //       },
-    //       {
-    //         "id": "qweqwe",
-    //         "type": "query",
-    //         "displayName": "findAll"
-    //       },
-    //       {
-    //         "id": "qweqwe",
-    //         "type": "query",
-    //         "displayName": "findAll"
-    //       },
-    //       {
-    //         "id": "aHtyasdasd2D",
-    //         "type": "branch",
-    //         "displayName": "findAll",
-    //         children: [
-    //           {
-    //             "id": "qweqwe",
-    //             "type": "query",
-    //             "displayName": "findAll"
-    //           },
-    //           {
-    //             "id": "aHtyasdasd2D",
-    //             "type": "query",
-    //             "displayName": "findAll"
-    //           }
-    //         ]
-    //       },
-    //       {
-    //         "id": "aHtyfsg2D",
-    //         "type": "query",
-    //         "displayName": "findAll"
-    //       }
-    //     ]
-    //   },
-    //   {
-    //     "id": "aHtrtyrty2D",
-    //     "type": "query",
-    //     "displayName": "findAll"
-    //   }
-    // ]
   },
   {
     "id": "fRUmvbnvnMS",

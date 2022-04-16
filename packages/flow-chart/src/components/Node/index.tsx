@@ -4,19 +4,22 @@ import { NodeBox } from '../NodeBox';
 import { TRANSVERSE_SPACING, LONGITUDINAL_SPACING } from '../../constant';
 import { getUniqId } from '../../utils';
 
+interface NodeProps {
+  nodeBox: NodeBox;
+  nodeData: IDictionary;
+}
 /**
  * 节点
  */
-export class Node {
-  constructor(parameters: { nodeBox: NodeBox, nodeData: IDictionary }) {
-    this.nodeBox = parameters.nodeBox
-    this.nodeData = parameters.nodeData
+export class Node extends React.Component<NodeProps> {
+  constructor(props: NodeProps) {
+    super(props);
   }
   /**
    * 业务数据
    */
-  public nodeData: IDictionary;
-  private nodeBox: NodeBox;
+  public nodeData: IDictionary = this.props.nodeData;
+  private nodeBox: NodeBox = this.props.nodeBox;
   public width: number = 200;
   public height: number = 100;
   public virtualWidth: number = this.width + TRANSVERSE_SPACING;

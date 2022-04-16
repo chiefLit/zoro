@@ -1,14 +1,16 @@
 import React from 'react'
 import { Drawer, Form, Input } from 'antd'
-import { GlobalContext, INodeConfig } from '../../context'
+import { GlobalContext } from '../../context'
 
-const Config = () => {
-  const { nodeConfig, setNodeConfig } = GlobalContext.useContainer()
+const Config: React.FC = () => {
+  // const { nodeConfig, setNodeConfig } = GlobalContext()
+  const nodeConfig = {}
+  // console.log('%cindex.tsx line:8 GlobalContext', 'color: #007acc;', GlobalContext);
 
   const handleClose = () => { }
   return (
     <Drawer title="配置信息" placement="right" onClose={handleClose} visible={true} mask={false} size='default'>
-      <Form<INodeConfig> layout='vertical' hideRequiredMark size='small'>
+      <Form layout='vertical' hideRequiredMark size='small'>
         <Form.Item
           name="with"
           label="节点宽度"
