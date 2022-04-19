@@ -11,11 +11,15 @@ interface NodeBoxProps {
   indexInPipeline: number;
 }
 
+export const isBranch = (nodeBox: NodeBox) => nodeBox.nodeData.type === 'branch'
+export const isGroup = (nodeBox: NodeBox) => nodeBox.nodeData.type === 'group'
+export const isBranchOrGroup = (nodeBox: NodeBox) => isBranch(nodeBox) || isGroup(nodeBox)
+
 /**
  * 节点盒子
  */
-export class NodeBox extends React.Component<NodeBoxProps & ModelTypes> {
-  constructor(props: NodeBoxProps & ModelTypes) {
+export class NodeBox extends React.Component<NodeBoxProps> {
+  constructor(props: NodeBoxProps) {
     super(props);
     const { nodeData, parentPipeline, indexInPipeline } = props
     this.node = new Node({ nodeBox: this, nodeData })
@@ -23,6 +27,7 @@ export class NodeBox extends React.Component<NodeBoxProps & ModelTypes> {
     const { typeConfigs } = useGlobalModel()
     this.typeConfig = typeConfigs[nodeData.type as keyof typeof typeConfigs]
     this.parentPipeline = parentPipeline
+    this.parentNodeBox = parentPipeline?.parentNodeBox
     this.indexInPipeline = indexInPipeline
     if (this.typeConfig?.branch) {
       this.childrenPipelines = this.nodeData.config?.branches?.map((item: any, index: number) => {
@@ -43,6 +48,7 @@ export class NodeBox extends React.Component<NodeBoxProps & ModelTypes> {
   }
 
   public parentPipeline: Pipeline;
+  public parentNodeBox?: NodeBox;
   public childrenPipelines: Pipeline[] = [];
 
   private rootPipeline?: Pipeline;
@@ -50,7 +56,7 @@ export class NodeBox extends React.Component<NodeBoxProps & ModelTypes> {
   /**
    * 业务数据
    */
-  private nodeData: IDictionary;
+  public nodeData: IDictionary;
 
   /**
    * 业务数据
@@ -106,30 +112,110 @@ export class NodeBox extends React.Component<NodeBoxProps & ModelTypes> {
     }
   }
 
+  /**
+   * 下级找到上级开始划线
+   * @returns 
+   */
+  // public renderLine() {
+  //   this.rootPipeline = this.parentPipeline.parentNodeBox ? this.parentPipeline.parentNodeBox.rootPipeline! : this.parentPipeline!;
+  //   let start: PointPosition;
+  //   let end: PointPosition = this.node.getPositionCoordinate()[0]?.top!
+  //   if (this.indexInPipeline === 0) {
+  //     // 我是老大，找爹的开始节点
+  //     // if (this.parentNodeBox === this) return
+  //     start = this.parentPipeline.parentNodeBox?.node.getPositionCoordinate()[0]?.bottom!;
+  //   } else {
+  //     // 我不是老大
+  //     const branch = this.parentPipeline.childrenNodeBoxs[this.indexInPipeline - 1];
+  //     if (branch.typeConfig?.branch || branch.typeConfig?.group) {
+  //       // 我哥不是单一节点
+  //       start = branch.node.getPositionCoordinate()[1]?.bottom!;
+  //     } else {
+  //       // 我哥是单一节点
+  //       start = branch.node.getPositionCoordinate()[0]?.bottom!;
+  //     }
+  //   }
+  //   return <g>
+  //     <DrawerLine
+  //       start={{ x: start?.x! + this.rootPipeline.getWidth() / 2, y: start?.y! }}
+  //       end={{ x: end?.x! + this.rootPipeline.getWidth() / 2, y: end?.y! }}
+  //     />
+  //     {this.childrenPipelines.map(item => <>{item.childrenNodeBoxs.map(box => box.renderLine())}</>)}
+  //   </g>
+  // }
+
+  /**
+   * 上级找到下级开始划线
+   * @returns 
+   */
   public renderLine() {
-    this.rootPipeline = this.parentPipeline.parentNodeBox ? this.parentPipeline.parentNodeBox.rootPipeline! : this.parentPipeline!;
-    let start: PointPosition;
-    let end: PointPosition = this.node.getPositionCoordinate()[0]?.top!
-    if (this.indexInPipeline === 0) {
-      // 我是老大，找爹的开始节点
-      // if (this.parentNodeBox === this) return
-      start = this.parentPipeline.parentNodeBox?.node.getPositionCoordinate()[0]?.bottom!;
-    } else {
-      // 我不是老大
-      const branch = this.parentPipeline.childrenNodeBoxs[this.indexInPipeline - 1];
-      if (branch.typeConfig?.branch || branch.typeConfig?.group) {
-        // 我哥不是单一节点
-        start = branch.node.getPositionCoordinate()[1]?.bottom!;
+    this.rootPipeline = this.parentPipeline.parentNodeBox?.rootPipeline ? this.parentPipeline.parentNodeBox.rootPipeline! : this.parentPipeline!;
+    let lineList: {
+      start: PointPosition;
+      end: PointPosition;
+      inflection?: 'start' | 'end'
+    }[] = []
+    const youngerBrother = this.parentPipeline.childrenNodeBoxs[this.indexInPipeline + 1]
+    if (isBranchOrGroup(this)) {
+      // branch或group节点
+      let branchStart: PointPosition = this.node.getPositionCoordinate()[0].bottom;
+      let nodeStart: PointPosition = this.node.getPositionCoordinate()[1].bottom;
+      this.childrenPipelines.forEach(pipeline => {
+        if (pipeline?.childrenNodeBoxs[0]) {
+          lineList.push({
+            start: branchStart,
+            end: pipeline?.childrenNodeBoxs[0].node.getPositionCoordinate()[0].top
+          })
+        }
+      })
+      if (youngerBrother) {
+        // 有弟弟
+        lineList.push({
+          start: this.node.getPositionCoordinate()[1].bottom,
+          end: youngerBrother.node.getPositionCoordinate()[0].top
+        })
       } else {
-        // 我哥是单一节点
-        start = branch.node.getPositionCoordinate()[0]?.bottom!;
+        // 没有弟弟
+        if (this.parentNodeBox?.nodeData.type === 'branch' || this.parentNodeBox?.nodeData.type === 'group') {
+          // 爸爸是branch或group节点
+          lineList.push({
+            start: this.node.getPositionCoordinate()[1].bottom,
+            end: this.parentNodeBox.node.getPositionCoordinate()[1].top,
+            inflection: 'end'
+          })
+        }
+      }
+    } else {
+      // 普通节点
+      if (youngerBrother) {
+        // 有弟弟
+        lineList.push({
+          start: this.node.getPositionCoordinate()[0].bottom,
+          end: youngerBrother.node.getPositionCoordinate()[0].top
+        })
+      } else {
+        // 没有弟弟
+        if (this.parentNodeBox && isBranchOrGroup(this.parentNodeBox)) {
+          // 爸爸是branch或group节点
+          lineList.push({
+            start: this.node.getPositionCoordinate()[0].bottom,
+            end: this.parentNodeBox.node.getPositionCoordinate()[1].top,
+            inflection: 'end'
+          })
+        }
       }
     }
     return <g>
-      <DrawerLine
-        start={{ x: start?.x! + this.rootPipeline.getWidth() / 2, y: start?.y! }}
-        end={{ x: end?.x! + this.rootPipeline.getWidth() / 2, y: end?.y! }}
-      />
+      {
+        lineList.map(line => {
+          const { start, end, inflection = 'start' } = line
+          return <DrawerLine
+            start={{ x: start?.x! + this.rootPipeline?.getWidth()! / 2, y: start?.y! }}
+            end={{ x: end?.x! + this.rootPipeline?.getWidth()! / 2, y: end?.y! }}
+            inflection={inflection}
+          />
+        })
+      }
       {this.childrenPipelines.map(item => <>{item.childrenNodeBoxs.map(box => box.renderLine())}</>)}
     </g>
   }

@@ -32,7 +32,7 @@ const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProp
           transform: 'translate(-50%, -50%)'
         }}>
           <svg width={pipeline.getWidth() + 'px'} height={pipeline.getHeight() + 'px'}>
-            {/* {pipeline.renderLine()} */}
+            {pipeline.renderLine()}
           </svg>
         </div>
         {pipeline.render()}

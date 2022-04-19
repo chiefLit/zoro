@@ -41,3 +41,10 @@ export interface PointPosition {
   x: number;
   y: number;
 }
+
+export interface INodeConfig {
+  width: number;
+  height: number;
+  transverseSpacing: number;
+  longitudinalSpacing: number;
+}

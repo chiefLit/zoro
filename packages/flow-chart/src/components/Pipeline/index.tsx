@@ -26,6 +26,7 @@ class Pipeline extends React.Component<PipelineProps> {
 
   public indexInNodeBox: number = this.props.indexInNodeBox || 0;
   public parentNodeBox?: NodeBox = this.props.parentNodeBox;
+  public parentPipeline?: Pipeline = this.props.parentNodeBox?.parentPipeline;
   public childrenNodeBoxs: NodeBox[] = [];
   public pipelineData: IDictionary[] = this.props.pipelineData;
 
@@ -58,6 +59,12 @@ class Pipeline extends React.Component<PipelineProps> {
   public getHeight = (): number => {
     return this.childrenNodeBoxs.reduce((sum, next) => sum + next.getHeight(), 0)
   };
+
+  public renderLine() {
+    return this.childrenNodeBoxs.map(nodeBox => {
+      return nodeBox.renderLine()
+    })
+  }
 
   public render() {
     return this.childrenNodeBoxs.map(nodeBox => {

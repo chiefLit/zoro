@@ -12,11 +12,6 @@ export default [
       branches: [
         {
           pipeline: [
-            {
-              "id": "aHty12D",
-              "type": "query1",
-              "displayName": "findAll"
-            }
           ]
         },
         {

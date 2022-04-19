@@ -1,14 +1,7 @@
 import React from 'react'
 import { getUniqId } from '../utils'
 import { createModel } from 'hox'
-import { IDictionary } from '../types';
-
-interface INodeConfig {
-  width: number;
-  height: number;
-  transverseSpacing: number;
-  longitudinalSpacing: number;
-}
+import { IDictionary, INodeConfig } from '../types';
 
 export interface ModelTypes {
   typeConfigs: { [key: string]: IDictionary };
