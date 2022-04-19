@@ -1,13 +1,11 @@
 import React from "react";
 import { IDictionary } from "../../types";
 import { NodeBox } from "../NodeBox";
-import { withModel } from "hox";
-import { GlobalContext } from '../../context'
+import useGlobalModel from '../../context'
 
 interface PipelineProps {
   parentNodeBox?: NodeBox;
   pipelineData: IDictionary[];
-  typeConfigs: any;
   indexInNodeBox?: number;
 }
 /**
@@ -20,11 +18,12 @@ class Pipeline extends React.Component<PipelineProps> {
     super(props);
     if (props.pipelineData) {
       this.childrenNodeBoxs = props.pipelineData.map((item, index) => {
-        const nodeBox = new NodeBox({ nodeData: item, typeConfigs: props.typeConfigs, parentPipeline: this, indexInPipeline: index });
+        const nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index });
         return nodeBox
       })
     }
   }
+
   public indexInNodeBox: number = this.props.indexInNodeBox || 0;
   public parentNodeBox?: NodeBox = this.props.parentNodeBox;
   public childrenNodeBoxs: NodeBox[] = [];

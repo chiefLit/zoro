@@ -1,92 +1,87 @@
 import React from 'react';
 import styles from './index.module.less'
+import { PointPosition } from '../../types'
+import useGlobalModel, { ModelTypes } from '../../context'
+import { withModel } from 'hox';
 
 export interface MoveStageProps {
   header: React.ReactNode;
   children?: React.ReactNode;
 }
 
-export interface MoveStageInstance {
-  stageDomId: string;
-  sceneDomId: string;
-  reset: () => void;
-  sceneZoom: { centerX: number; centerY: number; value: number };
-  getSceneZoom: () => number;
-  sceneZoomRef: React.MutableRefObject<{
-    centerX: number;
-    centerY: number;
-    value: number;
-  }>
+interface IMoveStageState {
+  stageWidth: number;
+  stageHeight: number;
+
+  scenePositionX: number;
+  scenePositionY: number;
+  sceneZoomCenter: PointPosition;
+  sceneZoomPercentage: number;
 }
 
-/**
- * 移动舞台
- * 滚轮移动和鼠标移动
- */
-const MoveStage = React.forwardRef<MoveStageInstance, MoveStageProps>((props, ref) => {
-  const { header, children } = props;
-  const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0)
-  // 唯一标识
-  const [stageDomId] = React.useState(`stage_${Date.now().toString(36)}`);
-  const [sceneDomId] = React.useState(`scene_${Date.now().toString(36)}`);
-  const [stagewh, setStagewh] = React.useState<number[]>();
-  const stageDomRef = React.useRef<HTMLElement>(document.querySelector(`#${stageDomId}`) as HTMLElement)
-  // 场景定位
-  const scenePositionRef = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const sceneZoomRef = React.useRef<{ centerX: number; centerY: number; value: number }>({ centerX: 0, centerY: 0, value: 1 });
+class MoveStage extends React.Component<MoveStageProps & ModelTypes, IMoveStageState> {
+  constructor(props: MoveStageProps & ModelTypes) {
+    super(props)
+    this.state = {
+      stageWidth: 0,
+      stageHeight: 0,
 
-  React.useImperativeHandle(ref, () => ({
-    stageDomId,
-    sceneDomId,
-    ...command,
-    sceneZoomRef,
-    sceneZoom: sceneZoomRef.current,
-    getSceneZoom: () => {
-      return Math.floor(sceneZoomRef.current?.value)
+      scenePositionX: 0,
+      scenePositionY: 0,
+      sceneZoomCenter: { x: 0, y: 0 },
+      sceneZoomPercentage: this.props.sceneZoomPercentage,
     }
-  }))
+    this.stageDomId = this.props.stageDomId
+    this.sceneDomId = this.props.sceneDomId
+  }
 
-  React.useEffect(() => {
-    const stage = document.querySelector(`#${stageDomId}`) as HTMLElement;
-    stageDomRef.current = stage
-    const stageWidth = stage.getBoundingClientRect().width;
-    const stageHeight = stage.getBoundingClientRect().height;
-    setStagewh([stageWidth, stageHeight])
-    stage.addEventListener('wheel', stageEvents.bindWheel)
-    stage.addEventListener('mousedown', stageEvents.bindMouseDown)
-    stage.addEventListener('mouseup', stageEvents.bindMouseUp)
-    stage.addEventListener('mouseleave', stageEvents.bindMouseUp)
-  }, [])
+  // 舞台
+  private stageDomId;
+  private stageDom?: HTMLElement;
 
-  /**
-   * 命令
-   */
-  const command = {
-    zoomPlus: () => {
-      sceneZoomRef.current.value
-    },
-    zoomMinus: () => { },
-    reset: () => {
-      scenePositionRef.current = { x: 0, y: 0 }
-      sceneZoomRef.current = { centerX: 0, centerY: 0, value: 1 }
-      stageDomRef.current.addEventListener('wheel', stageEvents.bindWheel)
-      stageDomRef.current.addEventListener('mousedown', stageEvents.bindMouseDown)
-      stageDomRef.current.addEventListener('mouseup', stageEvents.bindMouseUp)
-      stageDomRef.current.addEventListener('mouseleave', stageEvents.bindMouseUp)
-      forceUpdate()
+  // 屏幕
+  private sceneDomId;
+
+  public componentDidMount() {
+    this.stageDom = document.querySelector(`#${this.stageDomId}`) as HTMLElement;
+    this.setState({
+      stageWidth: this.stageDom.getBoundingClientRect().width,
+      stageHeight: this.stageDom.getBoundingClientRect().height,
+    })
+
+    this.stageDom.addEventListener('wheel', this.stageEvents.bindWheel)
+    this.stageDom.addEventListener('mousedown', this.stageEvents.bindMouseDown)
+    this.stageDom.addEventListener('mouseup', this.stageEvents.bindMouseUp)
+    this.stageDom.addEventListener('mouseleave', this.stageEvents.bindMouseUp)
+  }
+
+  componentDidUpdate() {
+    if (this.props.sceneZoomPercentage !== this.state.sceneZoomPercentage) {
+      this.setState({ sceneZoomPercentage: this.props.sceneZoomPercentage })
     }
   }
 
-  /**
-   * 舞台事件
-   */
-  const stageEvents = {
-    // 场景定位[mouseup时才会更新move变化] 区别于 scenePositionRef.current[实时用于渲染]。
-    scenePosition: { x: 0, y: 0 },
-    // mousedown定位
-    mouseDownPosition: { x: 0, y: 0 },
+  public resetStage = () => {
+    this.setState({
+      scenePositionX: 0,
+      scenePositionY: 0,
+      sceneZoomPercentage: 100,
+    })
+    if (this.stageDom) {
+      this.stageDom.addEventListener('wheel', this.stageEvents.bindWheel)
+      this.stageDom.addEventListener('mousedown', this.stageEvents.bindMouseDown)
+      this.stageDom.addEventListener('mouseup', this.stageEvents.bindMouseUp)
+      this.stageDom.addEventListener('mouseleave', this.stageEvents.bindMouseUp)
+    }
+  }
 
-    zoom: { centerX: 0, centerY: 0, value: 1 },
+  private stageEvents = {
+    // 临时记录场景定位[mouseup或者mouseleave时才会更新move变化]
+    scenePositionX: 0,
+    scenePositionY: 0,
+    // mousedown定位
+    mouseDownPositionX: 0,
+    mouseDownPositionY: 0,
 
     bindWheel: (e: WheelEvent) => {
       e.preventDefault();
@@ -94,61 +89,65 @@ const MoveStage = React.forwardRef<MoveStageInstance, MoveStageProps>((props, re
       const t = (e as any).wheelDeltaY ? (e as any).wheelDeltaY === -3 * e.deltaY : 0 === e.deltaMode;
       if (t) {
         // 计算方式：获取滚动时每一个step的delta值（左下为负值）去定位scene的position
-        stageEvents.scenePosition.x -= e.deltaX;
-        stageEvents.scenePosition.y -= e.deltaY;
-        scenePositionRef.current = { x: stageEvents.scenePosition.x, y: stageEvents.scenePosition.y }
+        this.stageEvents.scenePositionX -= e.deltaX;
+        this.stageEvents.scenePositionY -= e.deltaY;
+        const scenePositionX = this.state.scenePositionX - e.deltaX;
+        const scenePositionY = this.state.scenePositionY - e.deltaY;
+        this.setState({ scenePositionX, scenePositionY })
       } else {
+        // 效果不理想
+        return
         if (
-          (e.deltaY >= 0 && stageEvents.zoom.value < 0.5)
-          || (e.deltaY < 0 && stageEvents.zoom.value > 2)
+          (e.deltaY >= 0 && this.state.sceneZoomPercentage < 50)
+          || (e.deltaY < 0 && this.state.sceneZoomPercentage > 200)
         ) return
-        stageEvents.zoom.value = e.deltaY < 0 ? (stageEvents.zoom.value + .1) : (stageEvents.zoom.value - .1)
-        sceneZoomRef.current = stageEvents.zoom
+        const sceneZoomPercentage = e.deltaY < 0 ? (this.state.sceneZoomPercentage + 10) : (this.state.sceneZoomPercentage - 10)
+        this.setState({ sceneZoomPercentage })
       }
-      forceUpdate()
     },
 
     bindMouseDown: (e: MouseEvent) => {
       e.stopPropagation()
-      stageEvents.mouseDownPosition = { x: e.x, y: e.y }
-      stageDomRef.current?.addEventListener('mousemove', stageEvents.bindMouseMove as EventListenerOrEventListenerObject)
+      this.stageEvents.mouseDownPositionX = e.x
+      this.stageEvents.mouseDownPositionY = e.y
+      this.stageDom?.addEventListener('mousemove', this.stageEvents.bindMouseMove as EventListenerOrEventListenerObject)
     },
 
     bindMouseMove: (e: MouseEvent) => {
       e.stopPropagation()
       // 这是过程的delta，并非想wheel事件中按每个step来的，所以一次性操作，mouseup时再去记录。
-      const deltaX = stageEvents.mouseDownPosition.x - e.x
-      const deltaY = stageEvents.mouseDownPosition.y - e.y
-      scenePositionRef.current = { x: stageEvents.scenePosition.x - deltaX, y: stageEvents.scenePosition.y - deltaY }
-      forceUpdate()
+      const deltaX = this.stageEvents.mouseDownPositionX - e.x
+      const deltaY = this.stageEvents.mouseDownPositionY - e.y
+      const scenePositionX = this.stageEvents.scenePositionX - deltaX
+      const scenePositionY = this.stageEvents.scenePositionY - deltaY
+      this.setState({ scenePositionX, scenePositionY })
     },
 
     bindMouseUp: (e: MouseEvent) => {
       e.stopPropagation()
-      stageEvents.scenePosition = { x: scenePositionRef.current.x, y: scenePositionRef.current.y }
-      stageDomRef.current?.removeEventListener('mousemove', stageEvents.bindMouseMove as EventListenerOrEventListenerObject)
+      this.stageEvents.scenePositionX = this.state.scenePositionX
+      this.stageEvents.scenePositionY = this.state.scenePositionY
+      this.stageDom?.removeEventListener('mousemove', this.stageEvents.bindMouseMove as EventListenerOrEventListenerObject)
     }
   }
 
-  return (
-    <div className={styles.stageWrapper} id={stageDomId}>
-      <header>{header}</header>
-      {
-        stagewh
-          ? <div className={styles.sceneContainer} id={sceneDomId} style={{
-            left: scenePositionRef.current.x,
-            top: scenePositionRef.current.y,
-            margin: `0 0 0 ${stagewh[0] / 2}px`,
-            transform: `translate(-${sceneZoomRef.current.value * 50}%, 64px) 
-            scale(${sceneZoomRef.current.value})`,
-            transformOrigin: `${sceneZoomRef.current.centerX}px ${sceneZoomRef.current.centerY}px`
-          }} >
-            {children}
-          </div>
-          : null
-      }
+  public render() {
+    return (
+      <div className={styles.stageWrapper} id={this.stageDomId}>
+        <header>{this.props.header}</header>
+        <div className={styles.sceneContainer} id={this.sceneDomId} style={{
+          left: this.state.scenePositionX,
+          top: this.state.scenePositionY,
+          margin: `0 0 0 ${this.state.stageWidth / 2}px`,
+          transform: `translate(-${this.state.sceneZoomPercentage * 0.5}%, 64px) 
+            scale(${this.state.sceneZoomPercentage / 100})`,
+          transformOrigin: `${this.state.sceneZoomCenter.x}px ${this.state.sceneZoomCenter.y}px`
+        }} >
+          {this.props.children}
+        </div>
+      </div>
+    )
+  }
+}
 
-    </div>
-  )
-})
-export { MoveStage }
+export default withModel(useGlobalModel, (props) => ({ ...props }))(MoveStage);

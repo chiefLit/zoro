@@ -1,10 +1,9 @@
 import React from 'react'
 import { Drawer, Form, Input } from 'antd'
-import { GlobalContext } from '../../context'
+import useGlobalModel from '../../context'
 
 const Config: React.FC = () => {
-  // const { nodeConfig, setNodeConfig } = GlobalContext()
-  const nodeConfig = {}
+  const { nodeConfig, setNodeConfig } = useGlobalModel()
   // console.log('%cindex.tsx line:8 GlobalContext', 'color: #007acc;', GlobalContext);
 
   const handleClose = () => { }

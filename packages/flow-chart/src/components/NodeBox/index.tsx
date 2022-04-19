@@ -3,10 +3,10 @@ import { Node } from '../Node'
 import { IDictionary, PointPosition } from "../../types";
 import { DrawerLine } from '../Line';
 import { Pipeline } from '../Pipeline';
+import useGlobalModel, { ModelTypes } from '../../context'
 
 interface NodeBoxProps {
   nodeData: IDictionary,
-  typeConfigs: any;
   parentPipeline: Pipeline;
   indexInPipeline: number;
 }
@@ -14,14 +14,14 @@ interface NodeBoxProps {
 /**
  * 节点盒子
  */
-export class NodeBox extends React.Component<NodeBoxProps> {
-  constructor(props: NodeBoxProps) {
+export class NodeBox extends React.Component<NodeBoxProps & ModelTypes> {
+  constructor(props: NodeBoxProps & ModelTypes) {
     super(props);
-    const { nodeData, typeConfigs, parentPipeline, indexInPipeline } = props
+    const { nodeData, parentPipeline, indexInPipeline } = props
     this.node = new Node({ nodeBox: this, nodeData })
     this.nodeData = nodeData;
-    this.typeConfig = typeConfigs[nodeData.type]
-    this.typeConfigs = typeConfigs
+    const { typeConfigs } = useGlobalModel()
+    this.typeConfig = typeConfigs[nodeData.type as keyof typeof typeConfigs]
     this.parentPipeline = parentPipeline
     this.indexInPipeline = indexInPipeline
     if (this.typeConfig?.branch) {
@@ -29,7 +29,6 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         return new Pipeline({
           parentNodeBox: this,
           pipelineData: item.pipeline,
-          typeConfigs: this.typeConfigs,
           indexInNodeBox: index
         })
       })
@@ -37,7 +36,6 @@ export class NodeBox extends React.Component<NodeBoxProps> {
       const pipeline = new Pipeline({
         parentNodeBox: this,
         pipelineData: this.nodeData.config?.group?.pipeline,
-        typeConfigs: this.typeConfigs,
         indexInNodeBox: 0
       })
       this.childrenPipelines = [pipeline]
@@ -58,7 +56,6 @@ export class NodeBox extends React.Component<NodeBoxProps> {
    * 业务数据
    */
   public typeConfig: IDictionary;
-  public typeConfigs: IDictionary[];
 
   /**
    * 在父级的索引

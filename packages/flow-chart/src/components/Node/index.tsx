@@ -1,8 +1,11 @@
 import React from 'react'
 import { IDictionary } from '../../types';
 import { NodeBox } from '../NodeBox';
-import { TRANSVERSE_SPACING, LONGITUDINAL_SPACING } from '../../constant';
 import { getUniqId } from '../../utils';
+import useGlobalModel from '../../context'
+
+const TRANSVERSE_SPACING = 40
+const LONGITUDINAL_SPACING = 40
 
 interface NodeProps {
   nodeBox: NodeBox;
@@ -14,6 +17,11 @@ interface NodeProps {
 export class Node extends React.Component<NodeProps> {
   constructor(props: NodeProps) {
     super(props);
+    const { nodeConfig } = useGlobalModel()
+    this.width = nodeConfig.width
+    this.virtualWidth = this.width + LONGITUDINAL_SPACING
+    this.height = nodeConfig.height
+    this.virtualHeight = this.height + LONGITUDINAL_SPACING
   }
   /**
    * 业务数据
