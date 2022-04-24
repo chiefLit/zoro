@@ -49,7 +49,7 @@ export class Node extends React.Component<NodeProps> {
       bottom: { x: x + this.width / 2, y: y + this.height }
     }
 
-    return this.nodeBox.typeConfig?.branch || this.nodeBox.typeConfig?.group
+    return this.nodeBox.isBranch
       ? [
         startPosition,
         {
@@ -57,7 +57,13 @@ export class Node extends React.Component<NodeProps> {
           bottom: { x: x + this.width / 2, y: y + nodeBoxHeight - this.virtualHeight + this.height }
         }
       ]
-      : [startPosition]
+      : this.nodeBox.isGroup ? [
+        {
+          top: startPosition.top,
+          bottom: { x: x + this.width / 2, y: y  + nodeBoxHeight - this.virtualHeight + this.height }
+        }
+      ]
+        : [startPosition]
   }
 
   public render() {
@@ -76,7 +82,7 @@ export class Node extends React.Component<NodeProps> {
         }}
       >{this.nodeData.type}</div>
       {
-        this.nodeBox.typeConfig?.branch || this.nodeBox.typeConfig?.group
+        this.nodeBox.typeConfig?.branch?.hasEnd || this.nodeBox.typeConfig?.group?.hasEnd
           ? <div
             data-position={JSON.stringify(this.getPositionCoordinate())}
             style={{

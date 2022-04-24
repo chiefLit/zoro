@@ -18,8 +18,8 @@ export interface ModelTypes {
 }
 
 const initNodeConfig = {
-  width: 200,
-  height: 100,
+  width: 50,
+  height: 30,
   transverseSpacing: 40,
   longitudinalSpacing: 40
 }
@@ -32,10 +32,14 @@ const useGlobal = () => {
 
   const typeConfigs = {
     branch: {
-      branch: {}
+      branch: {
+        hasEnd: true
+      }
     },
     group: {
-      group: {}
+      group: {
+        hasEnd: true
+      }
     },
   }
 

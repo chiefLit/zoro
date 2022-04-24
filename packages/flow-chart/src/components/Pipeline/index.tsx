@@ -1,6 +1,7 @@
 import React from "react";
 import { IDictionary } from "../../types";
 import { NodeBox } from "../NodeBox";
+import { GroupNodeBox } from "../GroupNodeBox";
 import useGlobalModel from '../../context'
 
 interface PipelineProps {
@@ -17,8 +18,15 @@ class Pipeline extends React.Component<PipelineProps> {
   constructor(props: PipelineProps) {
     super(props);
     if (props.pipelineData) {
+      const { typeConfigs } = useGlobalModel()
       this.childrenNodeBoxs = props.pipelineData.map((item, index) => {
-        const nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index });
+        const typeConfig: IDictionary = typeConfigs[item.type as keyof typeof typeConfigs]
+        let nodeBox: NodeBox;
+        // if (typeConfig && typeConfig.group) {
+        //   nodeBox = new GroupNodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index });
+        // } else {
+          nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index });
+        // }
         return nodeBox
       })
     }
