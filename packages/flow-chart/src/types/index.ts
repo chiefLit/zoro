@@ -48,3 +48,8 @@ export interface INodeConfig {
   transverseSpacing: number;
   longitudinalSpacing: number;
 }
+
+export interface ISpacing {
+  transverseSpacing: number;
+  longitudinalSpacing: number;
+}

@@ -33,11 +33,11 @@ export class Node extends React.Component<NodeProps> {
   public nodeConfig: INodeConfig;
 
   public getX = () => {
-    return this.nodeBox.getX() - this.width / 2
+    return this.nodeBox.getX() - this.virtualWidth / 2
   }
 
   public getY = () => {
-    return this.nodeBox.getY() - this.nodeBox.getHeight() / 2 + this.nodeConfig.longitudinalSpacing / 2
+    return this.nodeBox.getY() - this.nodeBox.getHeight() / 2
   }
 
   public getPositionCoordinate = () => {
@@ -60,10 +60,24 @@ export class Node extends React.Component<NodeProps> {
       : this.nodeBox.isGroup ? [
         {
           top: startPosition.top,
-          bottom: { x: x + this.width / 2, y: y  + nodeBoxHeight - this.virtualHeight + this.height }
+          bottom: { x: x + this.width / 2, y: y + nodeBoxHeight - this.virtualHeight + this.height }
         }
       ]
         : [startPosition]
+  }
+
+  public drawerBox = () => {
+    const rootPipeline = this.nodeBox.parentPipeline.rootPipeline;
+    return <rect
+      key={`rect_${getUniqId()}`}
+      x={this.getX() + rootPipeline?.getWidth() / 2}
+      y={this.getY()}
+      width={this.virtualWidth}
+      height={this.virtualHeight}
+      strokeWidth="1"
+      fill='#f00'
+      opacity={0.1}
+    />
   }
 
   public render() {
@@ -79,6 +93,7 @@ export class Node extends React.Component<NodeProps> {
           left: this.getX() + 'px',
           top: this.getY() + 'px',
           border: '1px solid #f00',
+          transform: `translate(${this.nodeConfig.transverseSpacing / 2}px, ${this.nodeConfig.longitudinalSpacing / 2}px)`
         }}
       >{this.nodeData.type}</div>
       {

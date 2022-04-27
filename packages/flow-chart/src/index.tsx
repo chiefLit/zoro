@@ -1,5 +1,5 @@
 import React from 'react'
-import { Toolbar, Pipeline, Config } from './components'
+import { Toolbar, PipelineBox, Config } from './components'
 import './styles/global.less'
 import mockData from './mock/flowData'
 import useGlobalModel from './context'
@@ -17,27 +17,27 @@ const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProp
   const ProcessorEngineRef = React.useRef<ProcessorEngineRef>(null)
   React.useImperativeHandle(ref, () => ProcessorEngineRef.current!)
 
-  const pipeline = new Pipeline({ pipelineData: mockData })
+  const pipeline = new PipelineBox({ pipelineData: mockData })
 
   return (
     <div style={{ width: '100%', height: '100vh', background: 'red' }}>
       <MoveStage header={<Toolbar />} >
         <div style={{
           position: 'absolute',
-          top: pipeline.getHeight() / 2,
-          left: 0,
+          top: 0,
+          left: -pipeline.getWidth() / 2 + 'px',
           width: pipeline.getWidth() + 'px',
           height: pipeline.getHeight() + 'px',
           background: '#ccc',
-          transform: 'translate(-50%, -50%)'
+          // transform: 'translate(-50%, -50%)'
         }}>
           <svg width={pipeline.getWidth() + 'px'} height={pipeline.getHeight() + 'px'}>
-            {pipeline.renderLine()}
+            {pipeline.drawerBox()}
           </svg>
         </div>
         {pipeline.render()}
       </MoveStage>
-      <Config />
+      {/* <Config /> */}
     </div>
   )
 })
