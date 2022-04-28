@@ -48,6 +48,12 @@ export class NodeBox extends React.Component<NodeBoxProps> {
     this.isBranchOrGroup = this.isBranch || this.isGroup
     this.hasEnd = (this.isBranch && this.typeConfig.branch?.hasEnd)
       || (this.isGroup && this.typeConfig.group?.hasEnd);
+
+
+    this.nodeSelfSize = {
+      width: this.node.virtualWidth + this.nodeBoxConfig.transverseSpacing,
+      height: this.node.virtualHeight + this.nodeBoxConfig.longitudinalSpacing
+    };
   }
 
   public parentPipeline: PipelineBox;
@@ -81,54 +87,57 @@ export class NodeBox extends React.Component<NodeBoxProps> {
    */
   public node: Node;
 
+  // 本体大小
+  public nodeSelfSize: { width: number; height: number }
+
   public getWidth = (): number => {
     if (!this.childrenPipelines || this.childrenPipelines.length === 0) {
-      return this.node.virtualWidth
+      return this.nodeSelfSize.width
     } else {
       if (this.typeConfig?.branch) {
-        return this.childrenPipelines.reduce((sum, next) => sum + next.getWidth(), 0) || this.node.virtualWidth
+        return this.childrenPipelines.reduce((sum, next) => sum + next.getWidth(), 0) || this.nodeSelfSize.width
       } else {
-        return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getWidth()), 0) || this.node.virtualWidth
+        return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getWidth()), 0) || this.nodeSelfSize.width
       }
     }
   };
 
   public getHeight = (): number => {
     if (!this.childrenPipelines || this.childrenPipelines.length === 0) {
-      return this.node.virtualHeight
+      return this.nodeSelfSize.height
     } else {
       if (this.isBranch) {
         if (this.hasEnd) {
-          return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getHeight()), 0) + this.node.virtualHeight * 2
+          return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getHeight()), 0) + this.nodeSelfSize.height * 2 + this.nodeBoxConfig.longitudinalSpacing
         } else {
-          return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getHeight()), 0) + this.node.virtualHeight
+          return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getHeight()), 0) + this.nodeSelfSize.height + this.nodeBoxConfig.longitudinalSpacing
         }
       } else if (this.isGroup) {
         if (this.hasEnd) {
-          return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.node.virtualHeight * 2
+          return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.nodeSelfSize.height * 2 + this.nodeBoxConfig.longitudinalSpacing
         } else {
-          return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.node.virtualHeight
+          return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.nodeSelfSize.height + this.nodeBoxConfig.longitudinalSpacing
         }
       } else {
-        return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.node.virtualHeight
+        return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.nodeSelfSize.height
       }
     }
   };
-
-  public getVirtualWidth = () => this.getWidth() + this.nodeBoxConfig.transverseSpacing
-  public getVirtualHeight = () => this.getHeight() + this.nodeBoxConfig.longitudinalSpacing
 
   public getX = (): number => {
     return this.parentPipeline.getX()
   }
 
   public getY = (): number => {
+    let y = 0;
     if (this.indexInPipeline === 0) {
-      return this.parentPipeline.getY() - this.parentPipeline.getHeight() / 2 + this.getHeight() / 2
+      // 初始的时候加上间隔高度
+      y = this.parentPipeline.getY() - this.parentPipeline.getHeight() / 2 + this.getHeight() / 2 + this.nodeBoxConfig.longitudinalSpacing / 2
     } else {
       const brother = this.parentPipeline?.childrenNodeBoxs[this.indexInPipeline - 1]!
-      return brother.getY() + brother.getHeight() / 2 + this.getHeight() / 2
+      y = brother.getY() + brother.getHeight() / 2 + this.getHeight() / 2
     }
+    return y
   }
 
   public relativeNodeBox = {
@@ -143,7 +152,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
       <rect
         key={`rect_${getUniqId()}`}
         x={this.getX() - this.getWidth() / 2 + this.parentPipeline.rootPipeline.getWidth() / 2}
-        y={this.getY() - this.getHeight() / 2}
+        y={this.getY() - this.getHeight() / 2 - this.nodeBoxConfig.longitudinalSpacing / 2}
         width={this.getWidth()}
         height={this.getHeight()}
         strokeWidth="1"

@@ -43,48 +43,49 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
   public rootPipeline: PipelineBox = this.props.parentNodeBox ? this.props.parentNodeBox.parentPipeline.rootPipeline : this
 
   public getX = (): number => {
+    let x = 0;
     if (this.parentNodeBox) {
       if (this.indexInNodeBox === 0) {
-        return this.parentNodeBox.getX() - this.parentNodeBox.getWidth() / 2 + this.getWidth() / 2
+        x = this.parentNodeBox.getX() - this.parentNodeBox.getWidth() / 2 + this.getWidth() / 2
       } else {
         const brother = this.parentNodeBox.childrenPipelines?.[this.indexInNodeBox - 1]!
-        return brother.getX() + brother.getWidth() / 2 + this.getWidth() / 2
+        x = brother.getX() + brother.getWidth() / 2 + this.getWidth() / 2
       }
     } else {
-      return 0
+      x = 0
     }
+    return x 
   };
 
   public getY = (): number => {
+    let y = 0;
     if (this.parentNodeBox) {
-      return this.parentNodeBox.getY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + this.parentNodeBox.node.virtualHeight
+      y = this.parentNodeBox.getY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + this.parentNodeBox.nodeSelfSize.height
     } else {
       // 屏幕的上中点是center 所以需要初始高度
-      return this.getHeight() / 2
+      y = this.getHeight() / 2 + this.pipelineBoxConfig.longitudinalSpacing / 2
     }
+    return y
   };
 
   public getWidth = (): number => {
-    return this.childrenNodeBoxs.reduce((sum, next) => Math.max(sum, next.getWidth()), 0)
+    return this.childrenNodeBoxs.reduce((sum, next) => Math.max(sum, next.getWidth()), 0) + this.pipelineBoxConfig.transverseSpacing
   };
 
   public getHeight = (): number => {
-    return this.childrenNodeBoxs.reduce((sum, next) => sum + next.getHeight(), 0)
+    return this.childrenNodeBoxs.reduce((sum, next) => sum + next.getHeight(), 0) + this.pipelineBoxConfig.longitudinalSpacing
   };
 
-  public getVirtualWidth = () => this.getWidth() + this.pipelineBoxConfig.transverseSpacing
-  public getVirtualHeight = () => this.getHeight() + this.pipelineBoxConfig.longitudinalSpacing
-  
   public drawerBox = () => {
     return <g>
       <rect
         key={`rect_${getUniqId()}`}
         x={this.getX() - this.getWidth() / 2 + this.rootPipeline.getWidth() / 2}
-        y={this.getY() - this.getHeight() / 2}
+        y={this.getY() - this.getHeight() / 2 - this.pipelineBoxConfig.longitudinalSpacing / 2}
         width={this.getWidth()}
         height={this.getHeight()}
         strokeWidth="1"
-        fill='#0f0'
+        fill='#f00'
         opacity={0.1}
       />
       {this.childrenNodeBoxs.map(nodeBox => nodeBox.drawerBox())}

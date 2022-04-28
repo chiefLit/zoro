@@ -28,8 +28,7 @@ const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProp
           left: -pipeline.getWidth() / 2 + 'px',
           width: pipeline.getWidth() + 'px',
           height: pipeline.getHeight() + 'px',
-          background: '#ccc',
-          // transform: 'translate(-50%, -50%)'
+          background: '#ccc'
         }}>
           <svg width={pipeline.getWidth() + 'px'} height={pipeline.getHeight() + 'px'}>
             {pipeline.drawerBox()}

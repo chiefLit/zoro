@@ -24,12 +24,12 @@ const initNodeConfig = {
   longitudinalSpacing: 40
 }
 const initNodeBoxConfig = {
-  transverseSpacing: 0,
-  longitudinalSpacing: 60
+  transverseSpacing: 10,
+  longitudinalSpacing: 20
 }
 const initPipelineBoxConfig = {
-  transverseSpacing: 0,
-  longitudinalSpacing: 60
+  transverseSpacing: 20,
+  longitudinalSpacing: 10
 }
 
 const useGlobal = () => {

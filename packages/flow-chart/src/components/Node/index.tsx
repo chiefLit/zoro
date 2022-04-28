@@ -75,7 +75,7 @@ export class Node extends React.Component<NodeProps> {
       width={this.virtualWidth}
       height={this.virtualHeight}
       strokeWidth="1"
-      fill='#f00'
+      fill='#0f0'
       opacity={0.1}
     />
   }
