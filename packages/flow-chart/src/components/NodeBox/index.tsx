@@ -1,9 +1,9 @@
 import React from 'react'
 import { Node } from '../Node'
-import { IDictionary, ISpacing, PointPosition } from "../../types";
-import { DrawerLine } from '../Line';
+import { IDictionary, INodeBoxConfig } from "../../types";
+import { DrawLine } from '../Line';
 import { PipelineBox } from '../PipelineBox';
-import useGlobalModel, { ModelTypes } from '../../context'
+import useGlobalModel from '../../context'
 import { getUniqId } from '../../utils'
 
 export interface NodeBoxProps {
@@ -50,7 +50,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
       || (this.isGroup && this.typeConfig.group?.hasEnd);
 
 
-    this.nodeSelfSize = {
+    NodeBox.nodeSelfSize = {
       width: this.node.virtualWidth + this.nodeBoxConfig.transverseSpacing,
       height: this.node.virtualHeight + this.nodeBoxConfig.longitudinalSpacing
     };
@@ -63,66 +63,24 @@ export class NodeBox extends React.Component<NodeBoxProps> {
   public isGroup: boolean;
   public isBranchOrGroup: boolean;
   public hasEnd: boolean;
-  public nodeBoxConfig: ISpacing;
+  public nodeBoxConfig: INodeBoxConfig;
 
   public rootPipeline?: PipelineBox;
 
-  /**
-   * 业务数据
-   */
+  // 业务数据
   public nodeData: IDictionary;
 
-  /**
-   * 业务数据
-   */
+  // 节点配置
   public typeConfig: IDictionary;
 
-  /**
-   * 在父级的索引
-   */
+  // 在父级的索引
   public indexInPipeline: number = 0;
 
-  /**
-   * 节点实例
-   */
+  // 节点实例
   public node: Node;
 
   // 本体大小
-  public nodeSelfSize: { width: number; height: number }
-
-  public getWidth = (): number => {
-    if (!this.childrenPipelines || this.childrenPipelines.length === 0) {
-      return this.nodeSelfSize.width
-    } else {
-      if (this.typeConfig?.branch) {
-        return this.childrenPipelines.reduce((sum, next) => sum + next.getWidth(), 0) || this.nodeSelfSize.width
-      } else {
-        return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getWidth()), 0) || this.nodeSelfSize.width
-      }
-    }
-  };
-
-  public getHeight = (): number => {
-    if (!this.childrenPipelines || this.childrenPipelines.length === 0) {
-      return this.nodeSelfSize.height
-    } else {
-      if (this.isBranch) {
-        if (this.hasEnd) {
-          return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getHeight()), 0) + this.nodeSelfSize.height * 2 + this.nodeBoxConfig.longitudinalSpacing
-        } else {
-          return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getHeight()), 0) + this.nodeSelfSize.height + this.nodeBoxConfig.longitudinalSpacing
-        }
-      } else if (this.isGroup) {
-        if (this.hasEnd) {
-          return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.nodeSelfSize.height * 2 + this.nodeBoxConfig.longitudinalSpacing
-        } else {
-          return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.nodeSelfSize.height + this.nodeBoxConfig.longitudinalSpacing
-        }
-      } else {
-        return this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0) + this.nodeSelfSize.height
-      }
-    }
-  };
+  static nodeSelfSize: { width: number; height: number }
 
   public getX = (): number => {
     return this.parentPipeline.getX()
@@ -134,20 +92,63 @@ export class NodeBox extends React.Component<NodeBoxProps> {
       // 初始的时候加上间隔高度
       y = this.parentPipeline.getY() - this.parentPipeline.getHeight() / 2 + this.getHeight() / 2 + this.nodeBoxConfig.longitudinalSpacing / 2
     } else {
-      const brother = this.parentPipeline?.childrenNodeBoxs[this.indexInPipeline - 1]!
+      const brother = this.parentPipeline?.childrenNodeBoxs?.[this.indexInPipeline - 1]!
       y = brother.getY() + brother.getHeight() / 2 + this.getHeight() / 2
+      if (this.isBranchOrGroup) {
+        y = y
+      }
     }
     return y
   }
 
+  public getWidth = (): number => {
+    if (!this.childrenPipelines || this.childrenPipelines.length === 0) {
+      return this.nodeBoxConfig.nodeSelfWidth
+    } else {
+      if (this.typeConfig?.branch) {
+        return this.childrenPipelines.reduce((sum, next) => sum + next.getWidth(), 0) || this.nodeBoxConfig.nodeSelfWidth
+      } else {
+        return this.childrenPipelines.reduce((max, next) => Math.max(max, next.getWidth()), 0) || this.nodeBoxConfig.nodeSelfWidth
+      }
+    }
+  };
+
+  public getHeight = (): number => {
+    if (!this.childrenPipelines || this.childrenPipelines.length === 0) {
+      return this.nodeBoxConfig.nodeSelfHieght
+    } else {
+      if (this.isBranch) {
+        // 子Pipeline的最大高度
+        const maxChildPipelineHeight = this.childrenPipelines.reduce((max, next) => Math.max(max, next.getHeight()), 0)
+        if (this.hasEnd) {
+          return maxChildPipelineHeight + this.nodeBoxConfig.nodeSelfHieght * 2 + this.nodeBoxConfig.longitudinalSpacing
+        } else {
+          return maxChildPipelineHeight + this.nodeBoxConfig.nodeSelfHieght + this.nodeBoxConfig.longitudinalSpacing
+        }
+      } else {
+        // 子Pipeline的高度和
+        const sumChildrenPipelinesHeight = this.childrenPipelines.reduce((sum, next) => sum + next.getHeight(), 0)
+        if (this.isGroup) {
+          if (this.hasEnd) {
+            return sumChildrenPipelinesHeight + this.nodeBoxConfig.nodeSelfHieght * 2 + this.nodeBoxConfig.longitudinalSpacing
+          } else {
+            return sumChildrenPipelinesHeight + this.nodeBoxConfig.nodeSelfHieght + this.nodeBoxConfig.longitudinalSpacing
+          }
+        } else {
+          return sumChildrenPipelinesHeight + this.nodeBoxConfig.nodeSelfHieght
+        }
+      }
+    }
+  };
+
   public relativeNodeBox = {
-    youngerBrother: () => this.parentPipeline.childrenNodeBoxs[this.indexInPipeline + 1],
-    olderBrother: () => this.parentPipeline.childrenNodeBoxs[this.indexInPipeline + 1],
-    youngerUncle: () => this.parentNodeBox?.parentPipeline.childrenNodeBoxs[this.parentNodeBox?.indexInPipeline + 1],
-    olderUncle: () => this.parentNodeBox?.parentPipeline.childrenNodeBoxs[this.parentNodeBox?.indexInPipeline + 1],
+    youngerBrother: () => this.parentPipeline.childrenNodeBoxs?.[this.indexInPipeline + 1],
+    olderBrother: () => this.parentPipeline.childrenNodeBoxs?.[this.indexInPipeline + 1],
+    youngerUncle: () => this.parentNodeBox?.parentPipeline.childrenNodeBoxs?.[this.parentNodeBox?.indexInPipeline + 1],
+    olderUncle: () => this.parentNodeBox?.parentPipeline.childrenNodeBoxs?.[this.parentNodeBox?.indexInPipeline + 1],
   }
 
-  public drawerBox = () => {
+  public drawBox = () => {
     return <g>
       <rect
         key={`rect_${getUniqId()}`}
@@ -156,16 +157,49 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         width={this.getWidth()}
         height={this.getHeight()}
         strokeWidth="1"
+        stroke='#000000'
+        strokeDasharray={'3 2'}
         fill='#00f'
         opacity={0.1}
       />
-      {this.node.drawerBox()}
-      {this.childrenPipelines.map(item => item.drawerBox())}
+      {this.node.drawBox()}
+      {this.childrenPipelines.map(item => item.drawBox())}
     </g>
   }
 
-  public drawerLine = () => {
+  public drawLine = () => {
+    const x = this.getX() + this.parentPipeline.rootPipeline.getWidth() / 2;
+    const y = this.getY();
+    const width = this.getWidth()
+    const height = this.getHeight()
+    const points = {
+      top: { x, y: y - height / 2 },
+      divTop: { x, y: y - height / 2 - this.nodeBoxConfig.longitudinalSpacing / 2 },
+      divBottom: { x, y: y + height / 2 - this.nodeBoxConfig.longitudinalSpacing },
+      bottom: { x, y: y + height / 2 - this.nodeBoxConfig.longitudinalSpacing / 2 },
+    }
+    const boxSelfBottom = { x, y: y - height / 2 + this.nodeBoxConfig.nodeSelfHieght - this.nodeBoxConfig.longitudinalSpacing }
 
+    return <g>
+      {/* 间距产生的线段 */}
+      <DrawLine start={points.top} end={points.divTop} />
+      <DrawLine start={points.divBottom} end={points.bottom} />
+      {/* 分支组产生的线段 */}
+      {
+        this.childrenPipelines && this.childrenPipelines.length &&
+        this.childrenPipelines.map(pipeline => {
+          const pipelineX = pipeline.getX() + this.parentPipeline.rootPipeline.getWidth() / 2;
+          const pipelineY = pipeline.getY()
+          const endY = y + height / 2 - this.nodeBoxConfig.longitudinalSpacing - this.node.height;
+          return <>
+            <DrawLine start={boxSelfBottom} end={{ x: pipelineX, y: pipelineY - pipeline.getHeight() / 2 }} />
+            <DrawLine start={{ x: pipelineX, y: pipelineY - pipeline.getHeight() / 2 + pipeline.getBrotherMaxHeight() }} end={{ x, y: this.hasEnd ? endY : endY + this.node.height }} />
+          </>
+        })
+      }
+      {this.node.drawLine()}
+      {this.childrenPipelines.map(pipeline => pipeline.drawLine())}
+    </g>
   }
 
   /**

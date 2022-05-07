@@ -1,23 +1,23 @@
 import React from 'react'
 import { Toolbar, PipelineBox, Config } from './components'
 import './styles/global.less'
-import mockData from './mock/flowData'
 import useGlobalModel from './context'
 import MoveStage from './components/MoveStage'
 
-interface ProcessorEngineProps { }
+interface ProcessorEngineProps {
+  value: any[];
+}
 interface ProcessorEngineRef { }
-
 
 /**
  * 标准流程图
  */
 const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProps>((props, ref) => {
-  const { } = props;
+  const { value } = props;
   const ProcessorEngineRef = React.useRef<ProcessorEngineRef>(null)
   React.useImperativeHandle(ref, () => ProcessorEngineRef.current!)
 
-  const pipeline = new PipelineBox({ pipelineData: mockData })
+  const pipeline = new PipelineBox({ pipelineData: value })
 
   return (
     <div style={{ width: '100%', height: '100vh', background: 'red' }}>
@@ -31,7 +31,8 @@ const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProp
           background: '#ccc'
         }}>
           <svg width={pipeline.getWidth() + 'px'} height={pipeline.getHeight() + 'px'}>
-            {pipeline.drawerBox()}
+            {pipeline.drawBox()}
+            {pipeline.drawLine()}
           </svg>
         </div>
         {pipeline.render()}

@@ -11,13 +11,13 @@ export default [
     config: {
       branches: [
         {
-          pipeline: [
-            {
-              "id": "aHty12D",
-              "type": "query1",
-              "displayName": "findAll"
-            }
-          ]
+          // pipeline: [
+          //   {
+          //     "id": "aHty12D",
+          //     "type": "query1",
+          //     "displayName": "findAll"
+          //   }
+          // ]
         },
         {
           pipeline: [

@@ -1,7 +1,7 @@
 import React from 'react'
 import { getUniqId } from '../utils'
 import { createModel } from 'hox'
-import { IDictionary, INodeConfig, ISpacing } from '../types';
+import { IDictionary, INodeBoxConfig, INodeConfig, IPipelineConfig } from '../types';
 
 export interface ModelTypes {
   typeConfigs: { [key: string]: IDictionary };
@@ -16,20 +16,32 @@ export interface ModelTypes {
   scenePositionY: number;
   setScenePositionY: (data: number) => void;
 }
-
+/**
+ * 节点定位配置
+ */
 const initNodeConfig = {
   width: 200,
   transverseSpacing: 40,
   height: 30,
   longitudinalSpacing: 40
 }
+/**
+ * 节点盒子定位配置
+ */
+const NodeBoxTransverseSpacing = 0
+const NodeBoxLongitudinalSpacing = 50
 const initNodeBoxConfig = {
-  transverseSpacing: 10,
-  longitudinalSpacing: 20
+  nodeSelfWidth: initNodeConfig.width + initNodeConfig.transverseSpacing + NodeBoxTransverseSpacing,
+  nodeSelfHieght: initNodeConfig.height + initNodeConfig.longitudinalSpacing + NodeBoxLongitudinalSpacing,
+  transverseSpacing: NodeBoxTransverseSpacing,
+  longitudinalSpacing: NodeBoxLongitudinalSpacing
 }
+/**
+ * 管道定位配置
+ */
 const initPipelineBoxConfig = {
-  transverseSpacing: 20,
-  longitudinalSpacing: 10
+  transverseSpacing: 0,
+  longitudinalSpacing: 0
 }
 
 const useGlobal = () => {
@@ -37,8 +49,8 @@ const useGlobal = () => {
   const [scenePositionX, setScenePositionX] = React.useState(0);
   const [scenePositionY, setScenePositionY] = React.useState(0);
   const [nodeConfig, setNodeConfig] = React.useState<INodeConfig>(initNodeConfig)
-  const [nodeBoxConfig, setNodeBoxConfig] = React.useState<ISpacing>(initNodeBoxConfig)
-  const [pipelineBoxConfig, setPipelineBoxConfig] = React.useState<ISpacing>(initPipelineBoxConfig)
+  const [nodeBoxConfig, setNodeBoxConfig] = React.useState<INodeBoxConfig>(initNodeBoxConfig)
+  const [pipelineBoxConfig, setPipelineBoxConfig] = React.useState<IPipelineConfig>(initPipelineBoxConfig)
 
   const typeConfigs = {
     branch: {

@@ -49,7 +49,14 @@ export interface INodeConfig {
   longitudinalSpacing: number;
 }
 
-export interface ISpacing {
+export interface INodeBoxConfig {
+  nodeSelfWidth: number;
+  nodeSelfHieght: number;
+  transverseSpacing: number;
+  longitudinalSpacing: number;
+}
+
+export interface IPipelineConfig {
   transverseSpacing: number;
   longitudinalSpacing: number;
 }

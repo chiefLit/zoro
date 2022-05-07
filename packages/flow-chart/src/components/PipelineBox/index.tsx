@@ -1,9 +1,9 @@
 import React from "react";
-import { IDictionary, ISpacing } from "../../types";
+import { IDictionary, INodeBoxConfig, IPipelineConfig } from "../../types";
 import { NodeBox } from "../NodeBox";
-import { GroupNodeBox } from "../GroupNodeBox";
 import useGlobalModel from '../../context'
 import { getUniqId } from "../../utils";
+import { DrawLine } from "../Line";
 
 interface PipelineBoxProps {
   parentNodeBox?: NodeBox;
@@ -18,8 +18,8 @@ interface PipelineBoxProps {
 class PipelineBox extends React.Component<PipelineBoxProps> {
   constructor(props: PipelineBoxProps) {
     super(props);
-    const { typeConfigs, pipelineBoxConfig } = useGlobalModel()
-    this.pipelineBoxConfig = pipelineBoxConfig
+    const { typeConfigs, nodeBoxConfig } = useGlobalModel()
+    this.nodeBoxConfig = nodeBoxConfig
     if (props.pipelineData) {
       this.childrenNodeBoxs = props.pipelineData.map((item, index) => {
         const typeConfig: IDictionary = typeConfigs[item.type as keyof typeof typeConfigs]
@@ -34,12 +34,25 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
     }
   }
 
-  public pipelineBoxConfig: ISpacing;
-  public indexInNodeBox: number = this.props.indexInNodeBox || 0;
-  public parentNodeBox?: NodeBox = this.props.parentNodeBox;
-  public parentPipeline?: PipelineBox = this.props.parentNodeBox?.parentPipeline;
-  public childrenNodeBoxs: NodeBox[] = [];
+  // 业务数据
   public pipelineData: IDictionary[] = this.props.pipelineData;
+
+  // NodeBox配置
+  public nodeBoxConfig: INodeBoxConfig;
+
+  // 在NodeBox中的索引
+  public indexInNodeBox: number = this.props.indexInNodeBox || 0;
+
+  // 父级NodeBox
+  public parentNodeBox?: NodeBox = this.props.parentNodeBox;
+
+  // 父级Pipeline
+  public parentPipeline?: PipelineBox = this.props.parentNodeBox?.parentPipeline;
+
+  // 子NodeBox
+  public childrenNodeBoxs?: NodeBox[] = [];
+
+  // 根Pipeline
   public rootPipeline: PipelineBox = this.props.parentNodeBox ? this.props.parentNodeBox.parentPipeline.rootPipeline : this
 
   public getX = (): number => {
@@ -51,55 +64,88 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
         const brother = this.parentNodeBox.childrenPipelines?.[this.indexInNodeBox - 1]!
         x = brother.getX() + brother.getWidth() / 2 + this.getWidth() / 2
       }
-    } else {
-      x = 0
     }
-    return x 
+    return x
   };
 
   public getY = (): number => {
     let y = 0;
     if (this.parentNodeBox) {
-      y = this.parentNodeBox.getY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + this.parentNodeBox.nodeSelfSize.height
+      y = this.parentNodeBox.getY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + NodeBox.nodeSelfSize.height
     } else {
       // 屏幕的上中点是center 所以需要初始高度
-      y = this.getHeight() / 2 + this.pipelineBoxConfig.longitudinalSpacing / 2
+      y = this.getHeight() / 2
     }
     return y
   };
 
   public getWidth = (): number => {
-    return this.childrenNodeBoxs.reduce((sum, next) => Math.max(sum, next.getWidth()), 0) + this.pipelineBoxConfig.transverseSpacing
+    if (this.childrenNodeBoxs && this.childrenNodeBoxs.length) {
+      return this.childrenNodeBoxs.reduce((sum, next) => Math.max(sum, next.getWidth()), 0)
+    } else {
+      return this.nodeBoxConfig.nodeSelfWidth
+    }
   };
 
   public getHeight = (): number => {
-    return this.childrenNodeBoxs.reduce((sum, next) => sum + next.getHeight(), 0) + this.pipelineBoxConfig.longitudinalSpacing
+    if (this.childrenNodeBoxs && this.childrenNodeBoxs.length) {
+      return this.childrenNodeBoxs.reduce((sum, next) => sum + next.getHeight(), 0)
+    } else {
+      return 0
+    }
   };
 
-  public drawerBox = () => {
+  public getBrotherMaxHeight = (): number => {
+    if (this.parentNodeBox?.childrenPipelines) {
+      return this.parentNodeBox?.childrenPipelines.reduce((sum, next) => Math.max(sum, next.getHeight()), 0)
+    } else {
+      return this.nodeBoxConfig.nodeSelfHieght
+    }
+  };
+
+  public drawBox = () => {
     return <g>
       <rect
         key={`rect_${getUniqId()}`}
         x={this.getX() - this.getWidth() / 2 + this.rootPipeline.getWidth() / 2}
-        y={this.getY() - this.getHeight() / 2 - this.pipelineBoxConfig.longitudinalSpacing / 2}
+        y={this.getY() - this.getHeight() / 2}
         width={this.getWidth()}
-        height={this.getHeight()}
+        height={this.getBrotherMaxHeight()}
         strokeWidth="1"
+        stroke='#00f'
+        strokeDasharray={'1 2'}
         fill='#f00'
         opacity={0.1}
       />
-      {this.childrenNodeBoxs.map(nodeBox => nodeBox.drawerBox())}
+      {this.childrenNodeBoxs?.map(nodeBox => nodeBox.drawBox())}
     </g>
   }
 
-  // public renderLine() {
-  //   return this.childrenNodeBoxs.map(nodeBox => {
-  //     return nodeBox.renderLine()
-  //   })
-  // }
+  public drawLine() {
+    const x = this.getX() + this.rootPipeline.getWidth() / 2;
+    const y = this.getY();
+    const width = this.getWidth()
+    const height = this.getHeight()
+    const brotherMaxHeight = this.getBrotherMaxHeight()
+    const points = {
+      top: { x, y: y - height / 2 },
+      divTop: { x, y: y - height / 2 },
+      divBottom: { x, y: y + height / 2 },
+      bottom: { x, y: y + height / 2 },
+      boxBottom: {x, y: y - height/2 + brotherMaxHeight}
+    }
+    return <g>
+      {/* <DrawLine start={points.top} end={points.divTop} />
+      <DrawLine start={points.divBottom} end={points.bottom} /> */}
+      {/* <DrawLine start={points.top} end={points.bottom} /> */}
+      {/* <DrawLine start={{x:10,y:10}} end={points.bottom} /> */}
+      {this.parentNodeBox?.childrenPipelines?.length && <DrawLine start={points.bottom} end={points.boxBottom} />}
+      {this.childrenNodeBoxs?.map(nodeBox => nodeBox.drawLine())}
+    </g>
+  }
 
   public render() {
-    return this.childrenNodeBoxs.map(nodeBox => {
+    return this.childrenNodeBoxs?.map(nodeBox => {
       return nodeBox.render()
     })
   }

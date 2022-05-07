@@ -1,6 +1,7 @@
 import React from 'react'
-import { IDictionary, INodeConfig } from '../../types';
+import { IDictionary, INodeBoxConfig, INodeConfig } from '../../types';
 import { NodeBox } from '../NodeBox';
+import { DrawLine } from '../Line';
 import { getUniqId } from '../../utils';
 import useGlobalModel from '../../context'
 
@@ -14,23 +15,36 @@ interface NodeProps {
 export class Node extends React.Component<NodeProps> {
   constructor(props: NodeProps) {
     super(props);
-    const { nodeConfig } = useGlobalModel()
+    const { nodeConfig, nodeBoxConfig } = useGlobalModel()
     this.nodeConfig = nodeConfig
+    this.nodeBoxConfig = nodeBoxConfig
     this.width = nodeConfig.width
     this.virtualWidth = this.width + nodeConfig.transverseSpacing
     this.height = nodeConfig.height
     this.virtualHeight = this.height + nodeConfig.longitudinalSpacing
   }
-  /**
-   * 业务数据
-   */
+  // 业务数据
   public nodeData: IDictionary = this.props.nodeData;
+
+  // 节点盒子
   private nodeBox: NodeBox = this.props.nodeBox;
+
+  // 节点宽度
   public width: number;
+
+  // 节点高度
   public height: number;
+
+  // 虚拟宽度
   public virtualWidth: number;
+
+  // 虚拟高度
   public virtualHeight: number;
+
+  // 节点配置
   public nodeConfig: INodeConfig;
+  // 
+  public nodeBoxConfig: INodeBoxConfig;
 
   public getX = () => {
     return this.nodeBox.getX() - this.virtualWidth / 2
@@ -66,7 +80,7 @@ export class Node extends React.Component<NodeProps> {
         : [startPosition]
   }
 
-  public drawerBox = () => {
+  public drawBox = () => {
     const rootPipeline = this.nodeBox.parentPipeline.rootPipeline;
     return <rect
       key={`rect_${getUniqId()}`}
@@ -80,8 +94,25 @@ export class Node extends React.Component<NodeProps> {
     />
   }
 
+  public drawLine = () => {
+    const x = this.getX() + this.nodeBox.parentPipeline.rootPipeline.getWidth() / 2 + this.virtualWidth / 2;
+    const y = this.getY();
+    const points = {
+      top: { x, y: y },
+      divTop: { x, y: y + this.nodeConfig.longitudinalSpacing / 2 },
+      divBottom: { x, y: y + this.virtualHeight - this.nodeConfig.longitudinalSpacing / 2 },
+      bottom: { x, y: y + this.virtualHeight },
+    }
+    return <g>
+      <DrawLine start={points.top} end={points.divTop} endArrow />
+      <DrawLine start={points.divBottom} end={points.bottom} />
+    </g>
+  }
+
   public render() {
     const uniqId = getUniqId()
+    const x = this.getX()
+    const y = this.getY()
     return <>
       <div
         data-position={JSON.stringify(this.getPositionCoordinate())}
@@ -90,8 +121,8 @@ export class Node extends React.Component<NodeProps> {
           width: this.width + 'px',
           height: this.height + 'px',
           position: 'absolute',
-          left: this.getX() + 'px',
-          top: this.getY() + 'px',
+          left: x + 'px',
+          top: y + 'px',
           border: '1px solid #f00',
           transform: `translate(${this.nodeConfig.transverseSpacing / 2}px, ${this.nodeConfig.longitudinalSpacing / 2}px)`
         }}
@@ -104,11 +135,12 @@ export class Node extends React.Component<NodeProps> {
               width: this.width + 'px',
               height: this.height + 'px',
               position: 'absolute',
-              left: this.getX() + 'px',
-              top: this.getY() + this.nodeBox.getHeight() - this.virtualHeight + 'px',
+              left: x + 'px',
+              top: y + this.nodeBox.getHeight() - this.nodeBoxConfig.longitudinalSpacing - this.nodeConfig.height - this.nodeConfig.longitudinalSpacing / 2 +  'px',
               border: '1px solid #f00',
+              transform: `translate(${this.nodeConfig.transverseSpacing / 2}px, ${this.nodeConfig.longitudinalSpacing / 2}px)`
             }}
-          >{this.nodeData.type} end {uniqId} </div>
+          >{this.nodeData.type} end</div>
           : null
       }
     </>
