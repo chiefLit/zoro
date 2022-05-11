@@ -4,6 +4,7 @@ import { NodeBox } from "../NodeBox";
 import useGlobalModel from '../../context'
 import { getUniqId } from "../../utils";
 import { DrawLine } from "../Line";
+import { Point } from "../Point";
 
 interface PipelineBoxProps {
   parentNodeBox?: NodeBox;
@@ -18,8 +19,9 @@ interface PipelineBoxProps {
 class PipelineBox extends React.Component<PipelineBoxProps> {
   constructor(props: PipelineBoxProps) {
     super(props);
-    const { typeConfigs, nodeBoxConfig } = useGlobalModel()
+    const { typeConfigs, nodeBoxConfig, pipelineBoxConfig } = useGlobalModel()
     this.nodeBoxConfig = nodeBoxConfig
+    this.pipelineBoxConfig = pipelineBoxConfig
     if (props.pipelineData) {
       this.childrenNodeBoxs = props.pipelineData.map((item, index) => {
         const typeConfig: IDictionary = typeConfigs[item.type as keyof typeof typeConfigs]
@@ -39,6 +41,7 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
 
   // NodeBox配置
   public nodeBoxConfig: INodeBoxConfig;
+  public pipelineBoxConfig: IPipelineConfig;
 
   // 在NodeBox中的索引
   public indexInNodeBox: number = this.props.indexInNodeBox || 0;
@@ -55,23 +58,23 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
   // 根Pipeline
   public rootPipeline: PipelineBox = this.props.parentNodeBox ? this.props.parentNodeBox.parentPipeline.rootPipeline : this
 
-  public getX = (): number => {
+  public getCenterX = (): number => {
     let x = 0;
     if (this.parentNodeBox) {
       if (this.indexInNodeBox === 0) {
-        x = this.parentNodeBox.getX() - this.parentNodeBox.getWidth() / 2 + this.getWidth() / 2
+        x = this.parentNodeBox.getCenterX() - this.parentNodeBox.getWidth() / 2 + this.getWidth() / 2
       } else {
         const brother = this.parentNodeBox.childrenPipelines?.[this.indexInNodeBox - 1]!
-        x = brother.getX() + brother.getWidth() / 2 + this.getWidth() / 2
+        x = brother.getCenterX() + brother.getWidth() / 2 + this.getWidth() / 2
       }
     }
     return x
   };
 
-  public getY = (): number => {
+  public getCenterY = (): number => {
     let y = 0;
     if (this.parentNodeBox) {
-      y = this.parentNodeBox.getY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + NodeBox.nodeSelfSize.height
+      y = this.parentNodeBox.getCenterY() - this.parentNodeBox.getHeight() / 2 + this.getHeight() / 2 + NodeBox.nodeSelfSize.height
     } else {
       // 屏幕的上中点是center 所以需要初始高度
       y = this.getHeight() / 2
@@ -89,9 +92,9 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
 
   public getHeight = (): number => {
     if (this.childrenNodeBoxs && this.childrenNodeBoxs.length) {
-      return this.childrenNodeBoxs.reduce((sum, next) => sum + next.getHeight(), 0)
+      return this.childrenNodeBoxs.reduce((sum, next) => sum + next.getHeight(), 0) + this.pipelineBoxConfig.longitudinalSpacing
     } else {
-      return 0
+      return 0 + this.pipelineBoxConfig.longitudinalSpacing
     }
   };
 
@@ -99,7 +102,7 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
     if (this.parentNodeBox?.childrenPipelines) {
       return this.parentNodeBox?.childrenPipelines.reduce((sum, next) => Math.max(sum, next.getHeight()), 0)
     } else {
-      return this.nodeBoxConfig.nodeSelfHieght
+      return this.getHeight()
     }
   };
 
@@ -107,8 +110,8 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
     return <g>
       <rect
         key={`rect_${getUniqId()}`}
-        x={this.getX() - this.getWidth() / 2 + this.rootPipeline.getWidth() / 2}
-        y={this.getY() - this.getHeight() / 2}
+        x={this.getCenterX() - this.getWidth() / 2 + this.rootPipeline.getWidth() / 2}
+        y={this.getCenterY() - this.getHeight() / 2}
         width={this.getWidth()}
         height={this.getBrotherMaxHeight()}
         strokeWidth="1"
@@ -121,33 +124,46 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
     </g>
   }
 
-  public drawLine() {
-    const x = this.getX() + this.rootPipeline.getWidth() / 2;
-    const y = this.getY();
-    const width = this.getWidth()
-    const height = this.getHeight()
-    const brotherMaxHeight = this.getBrotherMaxHeight()
-    const points = {
-      top: { x, y: y - height / 2 },
-      divTop: { x, y: y - height / 2 },
-      divBottom: { x, y: y + height / 2 },
-      bottom: { x, y: y + height / 2 },
-      boxBottom: {x, y: y - height/2 + brotherMaxHeight}
-    }
+  public drawAddNodeButton() {
     return <g>
-      {/* <DrawLine start={points.top} end={points.divTop} />
-      <DrawLine start={points.divBottom} end={points.bottom} /> */}
-      {/* <DrawLine start={points.top} end={points.bottom} /> */}
-      {/* <DrawLine start={{x:10,y:10}} end={points.bottom} /> */}
-      {this.parentNodeBox?.childrenPipelines?.length && <DrawLine start={points.bottom} end={points.boxBottom} />}
+      {/* <circle cx={x} cy={y} r="10" /> */}
+      {this.childrenNodeBoxs?.map(nodeBox => nodeBox.drawAddNodeButton())}
+    </g>
+  }
+
+  public getPoint = (isSvg?: boolean) => {
+    const rootPipelineWidth = this.rootPipeline.getWidth()
+    const centerX = isSvg ? this.getCenterX() + rootPipelineWidth / 2 : this.getCenterX();
+    const centerY = this.getCenterY();
+    const height = this.getHeight();
+    const brotherMaxHeight = this.getBrotherMaxHeight()
+    return {
+      center: { x: centerX, y: centerY },
+      topCenter: { x: centerX, y: centerY - height / 2 + this.pipelineBoxConfig.longitudinalSpacing / 2 },
+      bottomCenter: { x: centerX, y: centerY + height / 2 - this.pipelineBoxConfig.longitudinalSpacing / 2 },
+      virtualTopCenter: { x: centerX, y: centerY - height / 2 },
+      virtualBottomCenter: { x: centerX, y: centerY + height / 2 },
+      maxBottomCenter: { x: centerX, y: centerY - height / 2 + brotherMaxHeight },
+    }
+  }
+
+  public drawLine() {
+    const { topCenter, bottomCenter, virtualTopCenter, virtualBottomCenter, maxBottomCenter } = this.getPoint(true)
+    return <g>
+      <DrawLine start={virtualTopCenter} end={topCenter} />
+      {this.parentNodeBox?.childrenPipelines?.length && <DrawLine start={bottomCenter} end={maxBottomCenter} />}
       {this.childrenNodeBoxs?.map(nodeBox => nodeBox.drawLine())}
     </g>
   }
 
   public render() {
-    return this.childrenNodeBoxs?.map(nodeBox => {
-      return nodeBox.render()
-    })
+    return <>
+      {
+        this.childrenNodeBoxs?.map(nodeBox => {
+          return nodeBox.render()
+        })
+      }
+    </>
   }
 }
 

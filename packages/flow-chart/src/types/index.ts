@@ -57,6 +57,5 @@ export interface INodeBoxConfig {
 }
 
 export interface IPipelineConfig {
-  transverseSpacing: number;
   longitudinalSpacing: number;
 }

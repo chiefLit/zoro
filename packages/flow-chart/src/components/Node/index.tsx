@@ -4,6 +4,7 @@ import { NodeBox } from '../NodeBox';
 import { DrawLine } from '../Line';
 import { getUniqId } from '../../utils';
 import useGlobalModel from '../../context'
+import { Point } from '../Point';
 
 interface NodeProps {
   nodeBox: NodeBox;
@@ -46,17 +47,71 @@ export class Node extends React.Component<NodeProps> {
   // 
   public nodeBoxConfig: INodeBoxConfig;
 
-  public getX = () => {
-    return this.nodeBox.getX() - this.virtualWidth / 2
+  public getCenterX = () => {
+    return this.nodeBox.getCenterX()
   }
 
-  public getY = () => {
-    return this.nodeBox.getY() - this.nodeBox.getHeight() / 2
+  public getCenterY = () => {
+    return this.nodeBox.getCenterY()
+  }
+
+  public getPoint = (isSvg?: boolean) => {
+    const rootPipeline = this.nodeBox.parentPipeline.rootPipeline;
+    const rootPipelineWidth = rootPipeline?.getWidth()
+    const centerX = isSvg ? this.getCenterX() + rootPipelineWidth / 2 : this.getCenterX()
+    const centerY = this.getCenterY()
+    const nodeBoxHeight = this.nodeBox.getHeight()
+    return {
+      virtualTopLeft: {
+        x: centerX - this.virtualWidth / 2,
+        y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
+      },
+      virtualTopCenter: {
+        x: centerX,
+        y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
+      },
+      topCenter: {
+        x: centerX,
+        y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeConfig.longitudinalSpacing / 2
+      },
+      bottomCenter: {
+        x: centerX,
+        y: centerY - nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeBoxConfig.nodeSelfHieght - this.nodeConfig.longitudinalSpacing / 2
+      },
+      virtualBottomCenter: {
+        x: centerX,
+        y: centerY - nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeBoxConfig.nodeSelfHieght
+      },
+      endNode: this.nodeBox.isBranchOrGroup && this.nodeBox.hasEnd
+        ? {
+          virtualTopLeft: {
+            x: centerX - this.virtualWidth / 2,
+            y: centerY + nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.nodeSelfHieght + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
+          },
+          virtualTopCenter: {
+            x: centerX,
+            y: centerY + nodeBoxHeight / 2 - this.nodeBoxConfig.nodeSelfHieght + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
+          },
+          topCenter: {
+            x: centerX,
+            y: centerY + nodeBoxHeight / 2 - this.nodeBoxConfig.nodeSelfHieght + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeConfig.longitudinalSpacing / 2
+          },
+          bottomCenter: {
+            x: centerX,
+            y: centerY + nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 - this.nodeConfig.longitudinalSpacing / 2
+          },
+          virtualBottomCenter: {
+            x: centerX,
+            y: centerY + nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
+          },
+        }
+        : null
+    }
   }
 
   public getPositionCoordinate = () => {
-    const x = this.getX()
-    const y = this.getY()
+    const x = this.getCenterX()
+    const y = this.getCenterY()
     const nodeBoxHeight = this.nodeBox.getHeight()
     const startPosition = {
       top: { x: x + this.width / 2, y },
@@ -82,65 +137,92 @@ export class Node extends React.Component<NodeProps> {
 
   public drawBox = () => {
     const rootPipeline = this.nodeBox.parentPipeline.rootPipeline;
-    return <rect
-      key={`rect_${getUniqId()}`}
-      x={this.getX() + rootPipeline?.getWidth() / 2}
-      y={this.getY()}
-      width={this.virtualWidth}
-      height={this.virtualHeight}
-      strokeWidth="1"
-      fill='#0f0'
-      opacity={0.1}
-    />
+    const { virtualTopLeft, endNode } = this.getPoint(true)
+    return <g>
+      <rect
+        key={`rect_node_start_${getUniqId()}`}
+        x={virtualTopLeft.x}
+        y={virtualTopLeft.y}
+        width={this.virtualWidth}
+        height={this.virtualHeight}
+        strokeWidth="1"
+        fill='#000'
+        opacity={0.1}
+      />
+      {
+        endNode
+          ? <rect
+            key={`rect_node_end_${getUniqId()}`}
+            x={endNode.virtualTopLeft.x}
+            y={endNode.virtualTopLeft.y}
+            width={this.virtualWidth}
+            height={this.virtualHeight}
+            strokeWidth="1"
+            fill='#000'
+            opacity={0.1}
+          />
+          : null
+      }
+    </g>
   }
 
   public drawLine = () => {
-    const x = this.getX() + this.nodeBox.parentPipeline.rootPipeline.getWidth() / 2 + this.virtualWidth / 2;
-    const y = this.getY();
-    const points = {
-      top: { x, y: y },
-      divTop: { x, y: y + this.nodeConfig.longitudinalSpacing / 2 },
-      divBottom: { x, y: y + this.virtualHeight - this.nodeConfig.longitudinalSpacing / 2 },
-      bottom: { x, y: y + this.virtualHeight },
-    }
+    const { virtualTopCenter, topCenter, bottomCenter, virtualBottomCenter, endNode } = this.getPoint(true)
     return <g>
-      <DrawLine start={points.top} end={points.divTop} endArrow />
-      <DrawLine start={points.divBottom} end={points.bottom} />
+      <DrawLine start={virtualTopCenter} end={topCenter} endArrow />
+      <DrawLine start={bottomCenter} end={virtualBottomCenter} />
+      {endNode && <DrawLine start={endNode.virtualTopCenter} end={endNode.topCenter} endArrow />}
+      {endNode && <DrawLine start={endNode.bottomCenter} end={endNode.virtualBottomCenter} />}
     </g>
   }
 
   public render() {
     const uniqId = getUniqId()
-    const x = this.getX()
-    const y = this.getY()
+    const { virtualTopLeft } = this.getPoint()
     return <>
       <div
         data-position={JSON.stringify(this.getPositionCoordinate())}
         data-root={JSON.stringify(this.nodeBox.parentPipeline?.getHeight())}
         style={{
+          width: this.virtualWidth + 'px',
+          height: this.virtualHeight + 'px',
+          position: 'absolute',
+          left: virtualTopLeft.x + 'px',
+          top: virtualTopLeft.y + 'px',
+          border: '1px solid #f00',
+        }}
+      >
+        <div style={{
           width: this.width + 'px',
           height: this.height + 'px',
-          position: 'absolute',
-          left: x + 'px',
-          top: y + 'px',
-          border: '1px solid #f00',
-          transform: `translate(${this.nodeConfig.transverseSpacing / 2}px, ${this.nodeConfig.longitudinalSpacing / 2}px)`
-        }}
-      >{this.nodeData.type}</div>
+          margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
+          border: '1px solid #f00'
+        }}>
+          {this.nodeData.type}
+        </div>
+      </div>
       {
         this.nodeBox.typeConfig?.branch?.hasEnd || this.nodeBox.typeConfig?.group?.hasEnd
           ? <div
             data-position={JSON.stringify(this.getPositionCoordinate())}
             style={{
+              width: this.virtualWidth + 'px',
+              height: this.virtualHeight + 'px',
+              position: 'absolute',
+              left: virtualTopLeft.x + 'px',
+              top: virtualTopLeft.y + this.nodeBox.getHeight() - this.nodeBox.nodeBoxConfig.nodeSelfHieght + 'px',
+              border: '1px solid #f00',
+            }}
+          >
+            <div style={{
               width: this.width + 'px',
               height: this.height + 'px',
-              position: 'absolute',
-              left: x + 'px',
-              top: y + this.nodeBox.getHeight() - this.nodeBoxConfig.longitudinalSpacing - this.nodeConfig.height - this.nodeConfig.longitudinalSpacing / 2 +  'px',
-              border: '1px solid #f00',
-              transform: `translate(${this.nodeConfig.transverseSpacing / 2}px, ${this.nodeConfig.longitudinalSpacing / 2}px)`
-            }}
-          >{this.nodeData.type} end</div>
+              margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
+              border: '1px solid #f00'
+            }}>
+              {this.nodeData.type} end
+            </div>
+          </div>
           : null
       }
     </>

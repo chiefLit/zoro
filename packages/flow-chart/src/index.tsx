@@ -31,6 +31,7 @@ const ProcessorEngine = React.forwardRef<ProcessorEngineRef, ProcessorEngineProp
           background: '#ccc'
         }}>
           <svg width={pipeline.getWidth() + 'px'} height={pipeline.getHeight() + 'px'}>
+            {/* {pipeline.drawAddNodeButton()} */}
             {pipeline.drawBox()}
             {pipeline.drawLine()}
           </svg>

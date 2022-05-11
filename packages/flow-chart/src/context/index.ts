@@ -40,8 +40,7 @@ const initNodeBoxConfig = {
  * 管道定位配置
  */
 const initPipelineBoxConfig = {
-  transverseSpacing: 0,
-  longitudinalSpacing: 0
+  longitudinalSpacing: 20
 }
 
 const useGlobal = () => {
@@ -55,12 +54,12 @@ const useGlobal = () => {
   const typeConfigs = {
     branch: {
       branch: {
-        hasEnd: false
+        hasEnd: true
       }
     },
     group: {
       group: {
-        hasEnd: false
+        hasEnd: true
       }
     },
   }
