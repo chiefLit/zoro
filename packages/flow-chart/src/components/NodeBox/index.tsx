@@ -6,11 +6,13 @@ import { PipelineBox } from '../PipelineBox';
 import useGlobalModel from '../../context'
 import { getUniqId } from '../../utils'
 import { Point } from '../Point';
+import { AddNodeButton } from '../AddNodeButton';
 
 export interface NodeBoxProps {
   nodeData: IDictionary,
   parentPipeline: PipelineBox;
   indexInPipeline: number;
+  path: number[]
 }
 
 /**
@@ -19,7 +21,7 @@ export interface NodeBoxProps {
 export class NodeBox extends React.Component<NodeBoxProps> {
   constructor(props: NodeBoxProps) {
     super(props);
-    const { nodeData, parentPipeline, indexInPipeline } = props
+    const { nodeData, parentPipeline, indexInPipeline, path } = props
     this.node = new Node({ nodeBox: this, nodeData })
     this.nodeData = nodeData;
     const { typeConfigs, nodeBoxConfig } = useGlobalModel()
@@ -33,14 +35,16 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         return new PipelineBox({
           parentNodeBox: this,
           pipelineData: item.pipeline,
-          indexInNodeBox: index
+          indexInNodeBox: index,
+          path: [...props.path, index]
         })
       })
     } else if (this.typeConfig?.group) {
       const pipeline = new PipelineBox({
         parentNodeBox: this,
         pipelineData: this.nodeData.config?.group?.pipeline,
-        indexInNodeBox: 0
+        indexInNodeBox: 0,
+        path: [...props.path, 0]
       })
       this.childrenPipelines = [pipeline]
     }
@@ -56,7 +60,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
       height: this.node.virtualHeight + this.nodeBoxConfig.longitudinalSpacing
     };
   }
-
+  public path: number[] = this.props.path
   public parentPipeline: PipelineBox;
   public parentNodeBox?: NodeBox;
   public childrenPipelines: PipelineBox[] = [];
@@ -149,27 +153,6 @@ export class NodeBox extends React.Component<NodeBoxProps> {
     olderUncle: () => this.parentNodeBox?.parentPipeline.childrenNodeBoxs?.[this.parentNodeBox?.indexInPipeline - 1],
   }
 
-  public drawBox = () => {
-    const { topLeft, endNode } = this.getPoint(true)
-    const uniqId = getUniqId()
-    return <g>
-      <rect
-        key={`rect_start_${uniqId}`}
-        x={topLeft.x}
-        y={topLeft.y}
-        width={this.getWidth()}
-        height={this.getHeight()}
-        strokeWidth="1"
-        stroke='#000000'
-        strokeDasharray={'3 2'}
-        fill='#00f'
-        opacity={0.1}
-      />
-      {this.node.drawBox()}
-      {this.childrenPipelines.map(item => item.drawBox())}
-    </g>
-  }
-
   public getPoint = (isSvg?: boolean) => {
     const rootPipelineWidth = this.parentPipeline.rootPipeline?.getWidth()
     const centerX = isSvg ? this.getCenterX() + rootPipelineWidth / 2 : this.getCenterX();
@@ -181,21 +164,23 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         x: centerX - width / 2,
         y: centerY - height / 2
       },
-      virtualTopCenter: {
-        x: centerX,
-        y: centerY - height / 2
-      },
-      topCenter: {
-        x: centerX,
-        y: centerY - height / 2 + this.nodeBoxConfig.longitudinalSpacing / 2
-      },
-      bottomCenter: {
-        x: centerX,
-        y: centerY - height / 2 + this.nodeBoxConfig.nodeSelfHieght - this.nodeBoxConfig.longitudinalSpacing / 2
-      },
-      virtualBottomCenter: {
-        x: centerX,
-        y: centerY - height / 2 + this.nodeBoxConfig.nodeSelfHieght
+      startNode: {
+        virtualTopCenter: {
+          x: centerX,
+          y: centerY - height / 2
+        },
+        topCenter: {
+          x: centerX,
+          y: centerY - height / 2 + this.nodeBoxConfig.longitudinalSpacing / 2
+        },
+        bottomCenter: {
+          x: centerX,
+          y: centerY - height / 2 + this.nodeBoxConfig.nodeSelfHieght - this.nodeBoxConfig.longitudinalSpacing / 2
+        },
+        virtualBottomCenter: {
+          x: centerX,
+          y: centerY - height / 2 + this.nodeBoxConfig.nodeSelfHieght
+        },
       },
       endNode: this.isBranchOrGroup && this.hasEnd
         ? {
@@ -224,12 +209,33 @@ export class NodeBox extends React.Component<NodeBoxProps> {
     }
   }
 
-  public drawLine = () => {
-    const { topCenter, bottomCenter, virtualTopCenter, virtualBottomCenter, endNode } = this.getPoint(true)
+  public drawBox = (): React.SVGProps<SVGRectElement> => {
+    const { topLeft } = this.getPoint(true)
+    const uniqId = getUniqId()
+    return <>
+      <rect
+        key={`rect_nodebox_${uniqId}`}
+        x={topLeft.x}
+        y={topLeft.y}
+        width={this.getWidth()}
+        height={this.getHeight()}
+        strokeWidth="1"
+        stroke='#000000'
+        strokeDasharray={'3 2'}
+        fill='#00f'
+        opacity={0.1}
+      />
+      {this.node.drawBox()}
+      {this.childrenPipelines.map(item => item.drawBox())}
+    </>
+  }
+
+  public drawLine = (): React.SVGProps<SVGRectElement> => {
+    const { startNode, endNode } = this.getPoint(true)
     return <g>
       {/* 间距产生的线段 */}
-      <DrawLine start={virtualTopCenter} end={topCenter} />
-      <DrawLine start={bottomCenter} end={virtualBottomCenter} />
+      <DrawLine start={startNode.virtualTopCenter} end={startNode.topCenter} />
+      <DrawLine start={startNode.bottomCenter} end={startNode.virtualBottomCenter} />
       {endNode && <DrawLine start={endNode.virtualTopCenter} end={endNode.topCenter} />}
       {endNode && <DrawLine start={endNode.bottomCenter} end={endNode.virtualBottomCenter} />}
       {/* 分支组产生的线段 */}
@@ -238,7 +244,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         this.childrenPipelines.map(pipeline => {
           const pipelinePoint = pipeline.getPoint(true)
           return <>
-            <DrawLine start={virtualBottomCenter} end={pipelinePoint.virtualTopCenter} />
+            <DrawLine start={startNode.virtualBottomCenter} end={pipelinePoint.virtualTopCenter} />
             {endNode && <DrawLine start={pipelinePoint.maxBottomCenter} end={endNode?.virtualTopCenter} />}
           </>
         })
@@ -248,13 +254,11 @@ export class NodeBox extends React.Component<NodeBoxProps> {
     </g>
   }
 
-  public drawAddNodeButton = () => {
-    const x = this.getCenterX() + this.parentPipeline.rootPipeline.getWidth() / 2;
-    const y = this.getCenterY() + this.getHeight() / 2 - this.nodeBoxConfig.longitudinalSpacing / 2;
-    return <g>
-      <circle cx={x} cy={y} r="10" />
+  public drawAddNodeButton = (): React.SVGProps<SVGRectElement> => {
+    return <>
+      <AddNodeButton belongPipeline={this.parentPipeline} formNode={this}/>
       {this.childrenPipelines.map(item => item.drawAddNodeButton())}
-    </g>
+    </>
   }
 
   public render() {

@@ -62,25 +62,27 @@ export class Node extends React.Component<NodeProps> {
     const centerY = this.getCenterY()
     const nodeBoxHeight = this.nodeBox.getHeight()
     return {
-      virtualTopLeft: {
-        x: centerX - this.virtualWidth / 2,
-        y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
-      },
-      virtualTopCenter: {
-        x: centerX,
-        y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
-      },
-      topCenter: {
-        x: centerX,
-        y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeConfig.longitudinalSpacing / 2
-      },
-      bottomCenter: {
-        x: centerX,
-        y: centerY - nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeBoxConfig.nodeSelfHieght - this.nodeConfig.longitudinalSpacing / 2
-      },
-      virtualBottomCenter: {
-        x: centerX,
-        y: centerY - nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeBoxConfig.nodeSelfHieght
+      startNode: {
+        virtualTopLeft: {
+          x: centerX - this.virtualWidth / 2,
+          y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
+        },
+        virtualTopCenter: {
+          x: centerX,
+          y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2
+        },
+        topCenter: {
+          x: centerX,
+          y: centerY - nodeBoxHeight / 2 + this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeConfig.longitudinalSpacing / 2
+        },
+        bottomCenter: {
+          x: centerX,
+          y: centerY - nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeBoxConfig.nodeSelfHieght - this.nodeConfig.longitudinalSpacing / 2
+        },
+        virtualBottomCenter: {
+          x: centerX,
+          y: centerY - nodeBoxHeight / 2 - this.nodeBox.nodeBoxConfig.longitudinalSpacing / 2 + this.nodeBoxConfig.nodeSelfHieght
+        },
       },
       endNode: this.nodeBox.isBranchOrGroup && this.nodeBox.hasEnd
         ? {
@@ -136,13 +138,12 @@ export class Node extends React.Component<NodeProps> {
   }
 
   public drawBox = () => {
-    const rootPipeline = this.nodeBox.parentPipeline.rootPipeline;
-    const { virtualTopLeft, endNode } = this.getPoint(true)
+    const { startNode, endNode } = this.getPoint(true)
     return <g>
       <rect
         key={`rect_node_start_${getUniqId()}`}
-        x={virtualTopLeft.x}
-        y={virtualTopLeft.y}
+        x={startNode.virtualTopLeft.x}
+        y={startNode.virtualTopLeft.y}
         width={this.virtualWidth}
         height={this.virtualHeight}
         strokeWidth="1"
@@ -167,10 +168,10 @@ export class Node extends React.Component<NodeProps> {
   }
 
   public drawLine = () => {
-    const { virtualTopCenter, topCenter, bottomCenter, virtualBottomCenter, endNode } = this.getPoint(true)
+    const { startNode, endNode } = this.getPoint(true)
     return <g>
-      <DrawLine start={virtualTopCenter} end={topCenter} endArrow />
-      <DrawLine start={bottomCenter} end={virtualBottomCenter} />
+      <DrawLine start={startNode.virtualTopCenter} end={startNode.topCenter} endArrow />
+      <DrawLine start={startNode.bottomCenter} end={startNode.virtualBottomCenter} />
       {endNode && <DrawLine start={endNode.virtualTopCenter} end={endNode.topCenter} endArrow />}
       {endNode && <DrawLine start={endNode.bottomCenter} end={endNode.virtualBottomCenter} />}
     </g>
@@ -178,17 +179,15 @@ export class Node extends React.Component<NodeProps> {
 
   public render() {
     const uniqId = getUniqId()
-    const { virtualTopLeft } = this.getPoint()
+    const { startNode } = this.getPoint()
     return <>
       <div
-        data-position={JSON.stringify(this.getPositionCoordinate())}
-        data-root={JSON.stringify(this.nodeBox.parentPipeline?.getHeight())}
         style={{
           width: this.virtualWidth + 'px',
           height: this.virtualHeight + 'px',
           position: 'absolute',
-          left: virtualTopLeft.x + 'px',
-          top: virtualTopLeft.y + 'px',
+          left: startNode.virtualTopLeft.x + 'px',
+          top: startNode.virtualTopLeft.y + 'px',
           border: '1px solid #f00',
         }}
       >
@@ -199,18 +198,18 @@ export class Node extends React.Component<NodeProps> {
           border: '1px solid #f00'
         }}>
           {this.nodeData.type}
+          {this.nodeBox.path}
         </div>
       </div>
       {
         this.nodeBox.typeConfig?.branch?.hasEnd || this.nodeBox.typeConfig?.group?.hasEnd
           ? <div
-            data-position={JSON.stringify(this.getPositionCoordinate())}
             style={{
               width: this.virtualWidth + 'px',
               height: this.virtualHeight + 'px',
               position: 'absolute',
-              left: virtualTopLeft.x + 'px',
-              top: virtualTopLeft.y + this.nodeBox.getHeight() - this.nodeBox.nodeBoxConfig.nodeSelfHieght + 'px',
+              left: startNode.virtualTopLeft.x + 'px',
+              top: startNode.virtualTopLeft.y + this.nodeBox.getHeight() - this.nodeBox.nodeBoxConfig.nodeSelfHieght + 'px',
               border: '1px solid #f00',
             }}
           >

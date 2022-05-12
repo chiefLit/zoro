@@ -29,7 +29,7 @@ const initNodeConfig = {
  * 节点盒子定位配置
  */
 const NodeBoxTransverseSpacing = 0
-const NodeBoxLongitudinalSpacing = 50
+const NodeBoxLongitudinalSpacing = 20
 const initNodeBoxConfig = {
   nodeSelfWidth: initNodeConfig.width + initNodeConfig.transverseSpacing + NodeBoxTransverseSpacing,
   nodeSelfHieght: initNodeConfig.height + initNodeConfig.longitudinalSpacing + NodeBoxLongitudinalSpacing,
@@ -40,7 +40,12 @@ const initNodeBoxConfig = {
  * 管道定位配置
  */
 const initPipelineBoxConfig = {
-  longitudinalSpacing: 20
+  longitudinalSpacing: 60
+}
+
+enum nodeType {
+  branch = 'branch',
+  group = 'group',
 }
 
 const useGlobal = () => {
@@ -52,16 +57,20 @@ const useGlobal = () => {
   const [pipelineBoxConfig, setPipelineBoxConfig] = React.useState<IPipelineConfig>(initPipelineBoxConfig)
 
   const typeConfigs = {
-    branch: {
+    [nodeType.branch]: {
       branch: {
         hasEnd: true
       }
     },
-    group: {
+    [nodeType.group]: {
       group: {
         hasEnd: true
       }
     },
+  }
+
+  const andNode = () => {
+    
   }
 
   return {
