@@ -44,7 +44,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         parentNodeBox: this,
         pipelineData: this.nodeData.config?.group?.pipeline,
         indexInNodeBox: 0,
-        path: [...props.path, 'config', 'group', 'pipeline', 0]
+        path: [...props.path, 'config', 'group']
       })
       this.childrenPipelines = [pipeline]
     }

@@ -25,27 +25,33 @@ const AddNodeButton: React.FC<AddNodeButtonProps> = (props) => {
     const mockNode = { displayName: '132', type: 'query12', id: getUniqId() }
     if (!flowData) return
     if (fromNodeBox) {
-      let targetPipeline = [...flowData];
+      let targetPipeline = JSON.parse(JSON.stringify(flowData));
       let pathList = fromNodeBox.path
       const lastIndex = pathList.pop() as number
-      fromNodeBox.path
       pathList.forEach(i => {
         targetPipeline = targetPipeline?.[i]
       })
-      if (targetPipeline) {
-        targetPipeline.splice(lastIndex, 0 ,mockNode)
-      }
-      setFlowData(targetPipeline)
+      console.log('%cindex.tsx line:35 flowData', 'color: #007acc;', flowData);
+      console.log('%cindex.tsx line:45 fromNodeBox.path', 'color: #007acc;', fromNodeBox.path);
+      console.log('%cindex.tsx line:35 lastIndex', 'color: #007acc;', lastIndex);
+      console.log('%cindex.tsx line:35 targetPipeline', 'color: #007acc;', targetPipeline);
+      // if (targetPipeline) {
+      //   targetPipeline.splice(lastIndex, 0 ,mockNode)
+      // }
+      // setFlowData(targetPipeline)
     } else {
-      let targetPipeline = [...flowData] as any;
+      let targetPipeline = JSON.parse(JSON.stringify(flowData));
       belongPipelineBox.path.forEach(i => {
         targetPipeline = targetPipeline?.[i]
       })
+      console.log('%cindex.tsx line:45 flowData', 'color: #007acc;', flowData);
+      console.log('%cindex.tsx line:45 belongPipelineBox.path', 'color: #007acc;', belongPipelineBox.path);
+      console.log('%cindex.tsx line:35 targetPipeline', 'color: #007acc;', targetPipeline);
       if (targetPipeline) {
         (targetPipeline as any).pipeline = (targetPipeline as any)?.pipeline || []
         targetPipeline.pipeline = [mockNode, ...(targetPipeline as any)?.pipeline]
       }
-      setFlowData(targetPipeline)
+      // setFlowData(targetPipeline)
     }
   }
 
