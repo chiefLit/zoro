@@ -1,3 +1,5 @@
+import { nodeType } from "./enums";
+
 export interface FlowProps {
   id?: string;
   name?: string;
@@ -58,4 +60,10 @@ export interface INodeBoxConfig {
 
 export interface IPipelineConfig {
   longitudinalSpacing: number;
+}
+
+export interface NodeDataProps {
+  id: string;
+  name: string;
+  type: nodeType
 }

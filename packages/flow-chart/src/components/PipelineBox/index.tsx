@@ -11,7 +11,7 @@ interface PipelineBoxProps {
   parentNodeBox?: NodeBox;
   pipelineData: IDictionary[];
   indexInNodeBox?: number;
-  path?: number[]
+  path?: Array<number | string>
 }
 /**
  * 管道
@@ -21,47 +21,44 @@ interface PipelineBoxProps {
 class PipelineBox extends React.Component<PipelineBoxProps> {
   constructor(props: PipelineBoxProps) {
     super(props);
-    console.log('%cindex.tsx line:24 props.path', 'color: #007acc;', props.path);
     const { typeConfigs, nodeBoxConfig, pipelineBoxConfig } = useGlobalModel()
     this.nodeBoxConfig = nodeBoxConfig
     this.pipelineBoxConfig = pipelineBoxConfig
     if (props.pipelineData) {
       this.childrenNodeBoxs = props.pipelineData.map((item, index) => {
-        const typeConfig: IDictionary = typeConfigs[item.type as keyof typeof typeConfigs]
         let nodeBox: NodeBox;
-        // if (typeConfig && typeConfig.group) {
-        //   nodeBox = new GroupNodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index });
-        // } else {
-        nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index, path: [...(props.path || []), index] });
-        // }
+        const path = props.path ? [...props.path, 'pipeline', index] : [index]
+        nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index, path });
         return nodeBox
       })
     }
   }
 
-  public path: number[] = this.props.path || []
-
+  public path: Array<number | string> = this.props.path || []
   // 业务数据
   public pipelineData: IDictionary[] = this.props.pipelineData;
-
   // NodeBox配置
   public nodeBoxConfig: INodeBoxConfig;
   public pipelineBoxConfig: IPipelineConfig;
-
   // 在NodeBox中的索引
   public indexInNodeBox: number = this.props.indexInNodeBox || 0;
-
   // 父级NodeBox
   public parentNodeBox?: NodeBox = this.props.parentNodeBox;
-
   // 父级Pipeline
   public parentPipeline?: PipelineBox = this.props.parentNodeBox?.parentPipeline;
-
   // 子NodeBox
   public childrenNodeBoxs?: NodeBox[] = [];
-
   // 根Pipeline
-  public rootPipeline: PipelineBox = this.props.parentNodeBox ? this.props.parentNodeBox.parentPipeline.rootPipeline : this
+  public rootPipeline: PipelineBox = this.props.parentNodeBox ? this.props.parentNodeBox.parentPipeline.rootPipeline : this;
+
+  public setPipelineData = (pipelineData: IDictionary[]) => {
+    this.pipelineData = pipelineData
+    this.childrenNodeBoxs = pipelineData.map((item, index) => {
+      let nodeBox: NodeBox;
+      nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index, path: [index] });
+      return nodeBox
+    })
+  }
 
   public getCenterX = (): number => {
     let x = 0;
@@ -172,7 +169,7 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
 
   public drawAddNodeButton = (): React.SVGProps<SVGRectElement> => {
     return <>
-      <AddNodeButton belongPipeline={this} />
+      <AddNodeButton belongPipelineBox={this} />
       {this.childrenNodeBoxs?.map(nodeBox => nodeBox.drawAddNodeButton())}
     </>
   }

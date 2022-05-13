@@ -12,7 +12,7 @@ export interface NodeBoxProps {
   nodeData: IDictionary,
   parentPipeline: PipelineBox;
   indexInPipeline: number;
-  path: number[]
+  path: Array<number|string>
 }
 
 /**
@@ -36,7 +36,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
           parentNodeBox: this,
           pipelineData: item.pipeline,
           indexInNodeBox: index,
-          path: [...props.path, index]
+          path: [...props.path, 'config', 'branches', index]
         })
       })
     } else if (this.typeConfig?.group) {
@@ -44,7 +44,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         parentNodeBox: this,
         pipelineData: this.nodeData.config?.group?.pipeline,
         indexInNodeBox: 0,
-        path: [...props.path, 0]
+        path: [...props.path, 'config', 'group', 'pipeline', 0]
       })
       this.childrenPipelines = [pipeline]
     }
@@ -60,7 +60,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
       height: this.node.virtualHeight + this.nodeBoxConfig.longitudinalSpacing
     };
   }
-  public path: number[] = this.props.path
+  public path: Array<number | string> = this.props.path
   public parentPipeline: PipelineBox;
   public parentNodeBox?: NodeBox;
   public childrenPipelines: PipelineBox[] = [];
@@ -256,7 +256,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
 
   public drawAddNodeButton = (): React.SVGProps<SVGRectElement> => {
     return <>
-      <AddNodeButton belongPipeline={this.parentPipeline} formNode={this}/>
+      <AddNodeButton belongPipelineBox={this.parentPipeline} fromNodeBox={this}/>
       {this.childrenPipelines.map(item => item.drawAddNodeButton())}
     </>
   }

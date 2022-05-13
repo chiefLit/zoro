@@ -197,8 +197,10 @@ export class Node extends React.Component<NodeProps> {
           margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
           border: '1px solid #f00'
         }}>
-          {this.nodeData.type}
-          {this.nodeBox.path}
+          {this.nodeData.displayName}<br/>
+          {this.nodeData.type}<br/>
+          {this.nodeBox.path}<br/>
+          {this.nodeBox.parentPipeline.path}<br/>
         </div>
       </div>
       {
