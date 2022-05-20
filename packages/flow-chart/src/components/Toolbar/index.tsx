@@ -1,7 +1,7 @@
 import React from 'react'
-import { Button, message, Divider, Popover } from 'antd'
+import { Divider, Popover } from 'antd'
 import { FullscreenExitOutlined, FullscreenOutlined, UndoOutlined, RedoOutlined, ColumnWidthOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons'
-import useGlobalModel from '../../context'
+import { GlobalContext } from '../../context'
 import styles from './index.module.less'
 
 interface ToolbarProps { }
@@ -14,7 +14,7 @@ interface ToolbarProps { }
 const Toolbar: React.FC<ToolbarProps> = (props) => {
   const { } = props;
   const [fullscreened, setFullscreened] = React.useState(false);
-  const { sceneZoomPercentage, setSceneZoomPercentage, stageDomId } = useGlobalModel()
+  const { sceneZoomPercentage, setSceneZoomPercentage } = React.useContext(GlobalContext)
 
   React.useEffect(() => {
     const left = document.querySelector('#_toolbar_left')
@@ -30,13 +30,13 @@ const Toolbar: React.FC<ToolbarProps> = (props) => {
   }
 
   const launchFullscreen = () => {
-    const element = document.querySelector(`#${stageDomId}`)!
-    if (element.requestFullscreen) {
-      element.requestFullscreen();
-      setFullscreened(true)
-    } else {
-      message.error('找不到主节点')
-    }
+    // const element = document.querySelector(`#${stageDomId}`)!
+    // if (element.requestFullscreen) {
+    //   element.requestFullscreen();
+    //   setFullscreened(true)
+    // } else {
+    //   message.error('找不到主节点')
+    // }
   }
 
   return (

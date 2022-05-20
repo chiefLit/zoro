@@ -1,14 +1,14 @@
 import React from 'react'
-import { IDictionary, INodeBoxConfig, INodeConfig } from '../../types';
+import { IDictionary, INodeBoxConfig, INodeConfig, ISizeConfig } from '../../types';
 import { NodeBox } from '../NodeBox';
 import { DrawLine } from '../Line';
 import { getUniqId } from '../../utils';
-import useGlobalModel from '../../context'
 import { Point } from '../Point';
 
 interface NodeProps {
   nodeBox: NodeBox;
   nodeData: IDictionary;
+  sizeConfig: ISizeConfig
 }
 /**
  * 节点
@@ -16,13 +16,13 @@ interface NodeProps {
 export class Node extends React.Component<NodeProps> {
   constructor(props: NodeProps) {
     super(props);
-    const { nodeConfig, nodeBoxConfig } = useGlobalModel()
-    this.nodeConfig = nodeConfig
-    this.nodeBoxConfig = nodeBoxConfig
-    this.width = nodeConfig.width
-    this.virtualWidth = this.width + nodeConfig.transverseSpacing
-    this.height = nodeConfig.height
-    this.virtualHeight = this.height + nodeConfig.longitudinalSpacing
+    const { sizeConfig } = props
+    this.nodeConfig = sizeConfig.nodeConfig
+    this.nodeBoxConfig = sizeConfig.nodeBoxConfig
+    this.width = sizeConfig.nodeConfig.width
+    this.virtualWidth = this.width + sizeConfig.nodeConfig.transverseSpacing
+    this.height = sizeConfig.nodeConfig.height
+    this.virtualHeight = this.height + sizeConfig.nodeConfig.longitudinalSpacing
   }
   // 业务数据
   public nodeData: IDictionary = this.props.nodeData;
@@ -197,10 +197,10 @@ export class Node extends React.Component<NodeProps> {
           margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
           border: '1px solid #f00'
         }}>
-          {this.nodeData.displayName}<br/>
-          {this.nodeData.type}<br/>
-          {this.nodeBox.path}<br/>
-          {this.nodeBox.parentPipeline.path}<br/>
+          {this.nodeData.displayName}<br />
+          {this.nodeData.type}<br />
+          {this.nodeBox.path}<br />
+          {this.nodeBox.parentPipeline.path}<br />
         </div>
       </div>
       {

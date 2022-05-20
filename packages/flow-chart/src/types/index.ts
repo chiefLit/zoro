@@ -62,8 +62,15 @@ export interface IPipelineConfig {
   longitudinalSpacing: number;
 }
 
+export interface ISizeConfig {
+  nodeConfig: INodeConfig;
+  nodeBoxConfig: INodeBoxConfig;
+  pipelineBoxConfig: IPipelineConfig
+}
+
 export interface NodeDataProps {
   id: string;
   name: string;
-  type: nodeType
+  type: nodeType;
+  config: any
 }

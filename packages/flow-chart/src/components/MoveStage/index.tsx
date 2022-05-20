@@ -1,12 +1,12 @@
 import React from 'react';
 import styles from './index.module.less'
 import { PointPosition } from '../../types'
-import useGlobalModel, { ModelTypes } from '../../context'
 import { withModel } from 'hox';
 
 export interface MoveStageProps {
   header: React.ReactNode;
   children?: React.ReactNode;
+  sceneZoomPercentage: number
 }
 
 interface IMoveStageState {
@@ -19,8 +19,8 @@ interface IMoveStageState {
   sceneZoomPercentage: number;
 }
 
-class MoveStage extends React.Component<MoveStageProps & ModelTypes, IMoveStageState> {
-  constructor(props: MoveStageProps & ModelTypes) {
+class MoveStage extends React.Component<MoveStageProps, any> {
+  constructor(props: MoveStageProps) {
     super(props)
     this.state = {
       stageWidth: 0,
@@ -31,16 +31,14 @@ class MoveStage extends React.Component<MoveStageProps & ModelTypes, IMoveStageS
       sceneZoomCenter: { x: 0, y: 0 },
       sceneZoomPercentage: this.props.sceneZoomPercentage,
     }
-    this.stageDomId = this.props.stageDomId
-    this.sceneDomId = this.props.sceneDomId
   }
 
   // 舞台
-  private stageDomId;
+  private stageDomId = `stage_${Date.now().toString(36)}`;
   private stageDom?: HTMLElement;
 
   // 屏幕
-  private sceneDomId;
+  private sceneDomId = `scene_${Date.now().toString(36)}`;
 
   public componentDidMount() {
     this.stageDom = document.querySelector(`#${this.stageDomId}`) as HTMLElement;
@@ -59,6 +57,13 @@ class MoveStage extends React.Component<MoveStageProps & ModelTypes, IMoveStageS
     if (this.props.sceneZoomPercentage !== this.state.sceneZoomPercentage) {
       this.setState({ sceneZoomPercentage: this.props.sceneZoomPercentage })
     }
+    // this.childRef.current?.setAttribute('style', `
+    //   left: ${this.state.scenePositionX};
+    //   top: ${this.state.scenePositionY};
+    //   margin: 0 0 0 ${this.state.stageWidth / 2}px;
+    //   transform: translate(-${this.state.sceneZoomPercentage * 0.5}%, 64px) scale(${this.state.sceneZoomPercentage / 100});
+    //   transformOrigin: ${this.state.sceneZoomCenter.x}px ${this.state.sceneZoomCenter.y}px;
+    // `)
   }
 
   public resetStage = () => {
@@ -150,4 +155,4 @@ class MoveStage extends React.Component<MoveStageProps & ModelTypes, IMoveStageS
   }
 }
 
-export default withModel(useGlobalModel, (props) => ({ ...props }))(MoveStage);
+export default MoveStage

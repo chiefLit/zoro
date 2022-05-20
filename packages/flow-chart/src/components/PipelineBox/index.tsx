@@ -1,17 +1,18 @@
 import React from "react";
-import { IDictionary, INodeBoxConfig, IPipelineConfig } from "../../types";
+import { IDictionary, INodeBoxConfig, IPipelineConfig, ISizeConfig } from "../../types";
 import { NodeBox } from "../NodeBox";
-import useGlobalModel from '../../context'
 import { getUniqId } from "../../utils";
 import { DrawLine } from "../Line";
 import { AddNodeButton } from "../AddNodeButton";
 import { Point } from "../Point";
+import { GlobalContext } from "../../context";
 
 interface PipelineBoxProps {
   parentNodeBox?: NodeBox;
   pipelineData: IDictionary[];
   indexInNodeBox?: number;
-  path?: Array<number | string>
+  path?: Array<number | string>;
+  sizeConfig: ISizeConfig;
 }
 /**
  * 管道
@@ -21,14 +22,17 @@ interface PipelineBoxProps {
 class PipelineBox extends React.Component<PipelineBoxProps> {
   constructor(props: PipelineBoxProps) {
     super(props);
-    const { typeConfigs, nodeBoxConfig, pipelineBoxConfig } = useGlobalModel()
-    this.nodeBoxConfig = nodeBoxConfig
-    this.pipelineBoxConfig = pipelineBoxConfig
     if (props.pipelineData) {
       this.childrenNodeBoxs = props.pipelineData.map((item, index) => {
         let nodeBox: NodeBox;
         const path = props.path ? [...props.path, 'pipeline', index] : [index]
-        nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index, path });
+        nodeBox = new NodeBox({
+          nodeData: item,
+          parentPipeline: this,
+          indexInPipeline: index,
+          path,
+          sizeConfig: props.sizeConfig
+        });
         return nodeBox
       })
     }
@@ -38,8 +42,8 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
   // 业务数据
   public pipelineData: IDictionary[] = this.props.pipelineData;
   // NodeBox配置
-  public nodeBoxConfig: INodeBoxConfig;
-  public pipelineBoxConfig: IPipelineConfig;
+  public nodeBoxConfig: INodeBoxConfig = this.props.sizeConfig.nodeBoxConfig;
+  public pipelineBoxConfig: IPipelineConfig = this.props.sizeConfig.pipelineBoxConfig;
   // 在NodeBox中的索引
   public indexInNodeBox: number = this.props.indexInNodeBox || 0;
   // 父级NodeBox
@@ -55,7 +59,13 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
     this.pipelineData = pipelineData
     this.childrenNodeBoxs = pipelineData.map((item, index) => {
       let nodeBox: NodeBox;
-      nodeBox = new NodeBox({ nodeData: item, parentPipeline: this, indexInPipeline: index, path: [index] });
+      nodeBox = new NodeBox({
+        nodeData: item,
+        parentPipeline: this,
+        indexInPipeline: index,
+        path: [index],
+        sizeConfig: this.props.sizeConfig
+      });
       return nodeBox
     })
   }
@@ -184,13 +194,13 @@ class PipelineBox extends React.Component<PipelineBoxProps> {
   }
 
   public render() {
-    return <>
+    return <GlobalContext.Consumer>
       {
-        this.childrenNodeBoxs?.map(nodeBox => {
+        data => this.childrenNodeBoxs?.map(nodeBox => {
           return nodeBox.render()
         })
       }
-    </>
+    </GlobalContext.Consumer>
   }
 }
 

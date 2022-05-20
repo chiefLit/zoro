@@ -1,18 +1,19 @@
 import React from 'react'
 import { Node } from '../Node'
-import { IDictionary, INodeBoxConfig } from "../../types";
+import { IDictionary, INodeBoxConfig, IPipelineConfig, ISizeConfig } from "../../types";
 import { DrawLine } from '../Line';
 import { PipelineBox } from '../PipelineBox';
-import useGlobalModel from '../../context'
 import { getUniqId } from '../../utils'
 import { Point } from '../Point';
 import { AddNodeButton } from '../AddNodeButton';
+import { GlobalContext, typeConfigs } from '../../context';
 
 export interface NodeBoxProps {
   nodeData: IDictionary,
   parentPipeline: PipelineBox;
   indexInPipeline: number;
-  path: Array<number|string>
+  path: Array<number | string>;
+  sizeConfig: ISizeConfig;
 }
 
 /**
@@ -21,11 +22,9 @@ export interface NodeBoxProps {
 export class NodeBox extends React.Component<NodeBoxProps> {
   constructor(props: NodeBoxProps) {
     super(props);
-    const { nodeData, parentPipeline, indexInPipeline, path } = props
-    this.node = new Node({ nodeBox: this, nodeData })
+    const { nodeData, parentPipeline, indexInPipeline, path, sizeConfig } = props
+    this.node = new Node({ nodeBox: this, nodeData, sizeConfig })
     this.nodeData = nodeData;
-    const { typeConfigs, nodeBoxConfig } = useGlobalModel()
-    this.nodeBoxConfig = nodeBoxConfig
     this.typeConfig = typeConfigs[nodeData.type as keyof typeof typeConfigs]
     this.parentPipeline = parentPipeline
     this.parentNodeBox = parentPipeline?.parentNodeBox
@@ -36,7 +35,8 @@ export class NodeBox extends React.Component<NodeBoxProps> {
           parentNodeBox: this,
           pipelineData: item.pipeline,
           indexInNodeBox: index,
-          path: [...props.path, 'config', 'branches', index]
+          path: [...props.path, 'config', 'branches', index],
+          sizeConfig,
         })
       })
     } else if (this.typeConfig?.group) {
@@ -44,7 +44,8 @@ export class NodeBox extends React.Component<NodeBoxProps> {
         parentNodeBox: this,
         pipelineData: this.nodeData.config?.group?.pipeline,
         indexInNodeBox: 0,
-        path: [...props.path, 'config', 'group']
+        path: [...props.path, 'config', 'group'],
+        sizeConfig,
       })
       this.childrenPipelines = [pipeline]
     }
@@ -68,7 +69,7 @@ export class NodeBox extends React.Component<NodeBoxProps> {
   public isGroup: boolean;
   public isBranchOrGroup: boolean;
   public hasEnd: boolean;
-  public nodeBoxConfig: INodeBoxConfig;
+  public nodeBoxConfig: INodeBoxConfig = this.props.sizeConfig.nodeBoxConfig;
 
   public rootPipeline?: PipelineBox;
 
@@ -256,15 +257,21 @@ export class NodeBox extends React.Component<NodeBoxProps> {
 
   public drawAddNodeButton = (): React.SVGProps<SVGRectElement> => {
     return <>
-      <AddNodeButton belongPipelineBox={this.parentPipeline} fromNodeBox={this}/>
+      <AddNodeButton belongPipelineBox={this.parentPipeline} fromNodeBox={this} />
       {this.childrenPipelines.map(item => item.drawAddNodeButton())}
     </>
   }
 
   public render() {
-    return <div key={this.nodeData.id}>
-      {this.node.render()}
-      {this.childrenPipelines?.map(item => item.render())}
-    </div>
+    return <GlobalContext.Consumer>
+      {
+        data => (
+          <div key={this.nodeData.id}>
+            {this.node.render()}
+            {this.childrenPipelines?.map(item => item.render())}
+          </div>
+        )
+      }
+    </GlobalContext.Consumer>
   }
 }
