@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from './index.module.less'
 import { PointPosition } from '../../types'
-import { withModel } from 'hox';
 
 export interface MoveStageProps {
   header: React.ReactNode;
@@ -67,11 +66,12 @@ class MoveStage extends React.Component<MoveStageProps, any> {
   }
 
   public resetStage = () => {
-    this.setState({
-      scenePositionX: 0,
-      scenePositionY: 0,
-      sceneZoomPercentage: 100,
-    })
+    // this.setState({
+    //   scenePositionX: 0,
+    //   scenePositionY: 0,
+    //   sceneZoomPercentage: 100,
+    // })
+    this.setScenePosition({ x: 0, y: 0 })
     if (this.stageDom) {
       this.stageDom.addEventListener('wheel', this.stageEvents.bindWheel)
       this.stageDom.addEventListener('mousedown', this.stageEvents.bindMouseDown)
@@ -96,9 +96,12 @@ class MoveStage extends React.Component<MoveStageProps, any> {
         // 计算方式：获取滚动时每一个step的delta值（左下为负值）去定位scene的position
         this.stageEvents.scenePositionX -= e.deltaX;
         this.stageEvents.scenePositionY -= e.deltaY;
-        const scenePositionX = this.state.scenePositionX - e.deltaX;
-        const scenePositionY = this.state.scenePositionY - e.deltaY;
-        this.setState({ scenePositionX, scenePositionY })
+        const positionX = Number(this.getScenePosition().scenePositionX?.slice(0, this.getScenePosition().scenePositionX?.length! - 2));
+        const positionY = Number(this.getScenePosition().scenePositionY?.slice(0, this.getScenePosition().scenePositionY?.length! - 2));
+        const scenePositionX = positionX - e.deltaX;
+        const scenePositionY = positionY - e.deltaY;
+        // this.setState({ scenePositionX, scenePositionY })
+        this.setScenePosition({ x: scenePositionX, y: scenePositionY })
       } else {
         // 效果不理想
         return
@@ -125,24 +128,44 @@ class MoveStage extends React.Component<MoveStageProps, any> {
       const deltaY = this.stageEvents.mouseDownPositionY - e.y
       const scenePositionX = this.stageEvents.scenePositionX - deltaX
       const scenePositionY = this.stageEvents.scenePositionY - deltaY
-      this.setState({ scenePositionX, scenePositionY })
+      // this.setState({ scenePositionX, scenePositionY })
+      this.setScenePosition({ x: scenePositionX, y: scenePositionY })
     },
 
     bindMouseUp: (e: MouseEvent) => {
       e.stopPropagation()
-      this.stageEvents.scenePositionX = this.state.scenePositionX
-      this.stageEvents.scenePositionY = this.state.scenePositionY
+      // this.stageEvents.scenePositionX = this.state.scenePositionX
+      // this.stageEvents.scenePositionY = this.state.scenePositionY
+      this.stageEvents.scenePositionX = Number(this.getScenePosition().scenePositionX?.slice(0, this.getScenePosition().scenePositionX?.length! - 2));
+      this.stageEvents.scenePositionY = Number(this.getScenePosition().scenePositionY?.slice(0, this.getScenePosition().scenePositionY?.length! - 2));
       this.stageDom?.removeEventListener('mousemove', this.stageEvents.bindMouseMove as EventListenerOrEventListenerObject)
     }
   }
 
+  private sceneRef = React.createRef<HTMLDivElement>()
+
+  private setScenePosition = ({ x, y }: { x: number; y: number }) => {
+    if (this.sceneRef.current) {
+      this.sceneRef.current.style.left = `${x}px`;
+      this.sceneRef.current.style.top = `${y}px`;
+    }
+  }
+
+  private getScenePosition = () => {
+    return {
+      scenePositionX: this.sceneRef.current?.style.left,
+      scenePositionY: this.sceneRef.current?.style.top
+    }
+  }
+
   public render() {
+    console.log('%cindex.tsx line:140 2312', 'color: #007acc;', 2312);
     return (
       <div className={styles.stageWrapper} id={this.stageDomId}>
         <header>{this.props.header}</header>
-        <div className={styles.sceneContainer} id={this.sceneDomId} style={{
-          left: this.state.scenePositionX,
-          top: this.state.scenePositionY,
+        <div ref={this.sceneRef} className={styles.sceneContainer} id={this.sceneDomId} style={{
+          // left: this.state.scenePositionX,
+          // top: this.state.scenePositionY,
           margin: `0 0 0 ${this.state.stageWidth / 2}px`,
           transform: `translate(-${this.state.sceneZoomPercentage * 0.5}%, 64px) 
             scale(${this.state.sceneZoomPercentage / 100})`,
