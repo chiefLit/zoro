@@ -1,0 +1,18 @@
+.nodeContainer {
+  position: relative;
+  border: 1px solid #f00;
+  &.end-node {
+    position: absolute;
+  }
+  .close-btn {
+    display: none;
+    position: absolute !important;
+    right: 5px;
+    top: 5px;
+  }
+  :hover {
+    .close-btn {
+      display: block;
+    }
+  }
+}

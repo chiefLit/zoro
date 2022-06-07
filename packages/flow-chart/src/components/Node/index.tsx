@@ -4,6 +4,9 @@ import { NodeBox } from '../NodeBox';
 import { DrawLine } from '../Line';
 import { getUniqId } from '../../utils';
 import { Point } from '../Point';
+import style from './style.module.less'
+import { CloseOutlined } from '@ant-design/icons'
+import { Button } from 'antd';
 
 interface NodeProps {
   nodeBox: NodeBox;
@@ -188,15 +191,17 @@ export class Node extends React.Component<NodeProps> {
           position: 'absolute',
           left: startNode.virtualTopLeft.x + 'px',
           top: startNode.virtualTopLeft.y + 'px',
-          border: '1px solid #f00',
+          // border: '1px solid #f00',
         }}
       >
-        <div style={{
-          width: this.width + 'px',
-          height: this.height + 'px',
-          margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
-          border: '1px solid #f00'
-        }}>
+        <div
+          className={style.nodeContainer}
+          style={{
+            width: this.width + 'px',
+            height: this.height + 'px',
+            margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
+          }}>
+          <Button className={style['close-btn']} type="link" icon={<CloseOutlined />} size={'small'} />
           {this.nodeData.displayName}<br />
           {this.nodeData.type}<br />
           {this.nodeBox.path}<br />
@@ -212,15 +217,18 @@ export class Node extends React.Component<NodeProps> {
               position: 'absolute',
               left: startNode.virtualTopLeft.x + 'px',
               top: startNode.virtualTopLeft.y + this.nodeBox.getHeight() - this.nodeBox.nodeBoxConfig.nodeSelfHieght + 'px',
-              border: '1px solid #f00',
+              // border: '1px solid #f00',
             }}
           >
-            <div style={{
-              width: this.width + 'px',
-              height: this.height + 'px',
-              margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
-              border: '1px solid #f00'
-            }}>
+            {/* <Button className='close-btn' type="link" icon={<CloseOutlined />} size={'small'} /> */}
+            <div
+              // className={`${style.nodeContainer} ${style['end-node']}`}
+              style={{
+                width: this.width + 'px',
+                height: this.height + 'px',
+                margin: `${this.nodeConfig.longitudinalSpacing / 2}px ${this.nodeConfig.transverseSpacing / 2}px`,
+                border: '1px solid #f00'
+              }}>
               {this.nodeData.type} end
             </div>
           </div>
