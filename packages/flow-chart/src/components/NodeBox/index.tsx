@@ -154,6 +154,11 @@ export class NodeBox extends React.Component<NodeBoxProps> {
     olderUncle: () => this.parentNodeBox?.parentPipeline.childrenNodeBoxs?.[this.parentNodeBox?.indexInPipeline - 1],
   }
 
+  /**
+   * 获取
+   * @param isSvg 是否为svg
+   * @returns 
+   */
   public getPoint = (isSvg?: boolean) => {
     const rootPipelineWidth = this.parentPipeline.rootPipeline?.getWidth()
     const centerX = isSvg ? this.getCenterX() + rootPipelineWidth / 2 : this.getCenterX();

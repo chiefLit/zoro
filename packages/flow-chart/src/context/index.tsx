@@ -3,6 +3,7 @@ import { IDictionary, ISizeConfig, NodeDataProps } from '../types';
 import { NodeBox, PipelineBox } from '../components';
 import { nodeType } from '../types/enums';
 import { getUniqId } from '../utils';
+import { Modal } from 'antd';
 
 /**
  * 节点定位配置
@@ -69,7 +70,10 @@ interface GlobalContextProps {
   fromNodeBox?: NodeBox;
   setFromNodeBox: React.Dispatch<React.SetStateAction<NodeBox | undefined>>;
   belongPipelineBox?: PipelineBox;
-  setBelongPipelineBox: React.Dispatch<React.SetStateAction<PipelineBox | undefined>>
+  setBelongPipelineBox: React.Dispatch<React.SetStateAction<PipelineBox | undefined>>;
+
+  heightLightNodes: NodeDataProps[];
+  setHeightLightNodes: React.Dispatch<React.SetStateAction<NodeDataProps[]>>;
 }
 
 const GlobalContext = React.createContext<GlobalContextProps>({} as GlobalContextProps)
@@ -77,6 +81,7 @@ const GlobalContext = React.createContext<GlobalContextProps>({} as GlobalContex
 const GlobalProvider: React.FC<{ data: any }> = ({ children, data }) => {
   // 数据和历史记录
   const [flowData, setFlowData] = React.useState<IDictionary[]>(data);
+  const [heightLightNodes, setHeightLightNodes] = React.useState<NodeDataProps[]>([])
   const [historyRecords, setHistoryRecords] = React.useState<Array<IDictionary[]>>([data]);
   // 定位大小等信息
   const [sceneZoomPercentage, setSceneZoomPercentage] = React.useState(100)
@@ -87,12 +92,6 @@ const GlobalProvider: React.FC<{ data: any }> = ({ children, data }) => {
   const [fromNodeBox, setFromNodeBox] = React.useState<NodeBox>()
   const [belongPipelineBox, setBelongPipelineBox] = React.useState<PipelineBox>()
   const [addNodeVisible, setAddNodeVisible] = React.useState<boolean>(false)
-
-  const handleSetFlowData = (data: IDictionary[]) => {
-    if (historyRecords[historyRecords.length - 1] === data) return
-    setHistoryRecords([...historyRecords, data])
-    setFlowData([...data])
-  }
 
   // 添加节点
   const addNode = (params: { data: NodeDataProps }) => {
@@ -112,43 +111,32 @@ const GlobalProvider: React.FC<{ data: any }> = ({ children, data }) => {
 
     if (fromNodeBox) {
       // 当前NodeBox下一个
-      let targetPipeline: IDictionary[] | IDictionary = flowData;
-      let pathList = fromNodeBox!.path
-      const lastIndex = pathList.pop() as number
-      pathList.forEach(i => {
-        targetPipeline = targetPipeline[i]
+      const path = fromNodeBox!.path.map((item, index) => {
+        return index === fromNodeBox!.path.length - 1 ? (item as number) + 1 : item
       })
-      if (targetPipeline) {
-        targetPipeline.splice(lastIndex + 1, 0, newNodeData)
-      }
-      handleSetFlowData(flowData)
+      const newData = addNodeByPath(flowData, path, newNodeData)
+      setFlowData([...newData])
     } else {
       // 当前pipeline第一个
-      let targetPipeline: IDictionary[] | IDictionary = flowData;
-      belongPipelineBox!.path.forEach(i => {
-        targetPipeline = targetPipeline[i]
-      })
-      if (targetPipeline) {
-        (targetPipeline as IDictionary).pipeline = (targetPipeline as any)?.pipeline || [];
-        (targetPipeline as IDictionary).pipeline = [newNodeData, ...(targetPipeline as any)?.pipeline];
-      }
-      handleSetFlowData(flowData)
+      const path = [...belongPipelineBox!.path, 'pipeline', 0]
+      const newData = addNodeByPath(flowData, path, newNodeData)
+      setFlowData([...newData])
     }
+    setHeightLightNodes([newNodeData])
     setAddNodeVisible(false)
   }
   // 删除节点
   const deldeteNode = (params: { nodeBox: NodeBox }) => {
     const { nodeBox } = params;
-    let pathList = nodeBox.path
-    const lastIndex = pathList.pop() as number
-    let targetPipeline: IDictionary[] | IDictionary = flowData;
-    pathList.forEach(i => {
-      targetPipeline = targetPipeline[i]
+    Modal.confirm({
+      title: '提示',
+      content: `确认删除节点 ${nodeBox.nodeData.displayName}`,
+      onOk: () => {
+        const newData = deleteNodeByPath(flowData, nodeBox.path)
+        console.log('%cindex.tsx line:143 newData', 'color: #007acc;', newData);
+        setFlowData([...newData])
+      }
     })
-    if (targetPipeline) {
-      targetPipeline = targetPipeline.filter((nodeData: any) => nodeData.id !== nodeBox.nodeData.id)
-    }
-    handleSetFlowData(flowData)
   }
 
   // 添加分支
@@ -172,7 +160,8 @@ const GlobalProvider: React.FC<{ data: any }> = ({ children, data }) => {
     fromNodeBox, setFromNodeBox,
     belongPipelineBox, setBelongPipelineBox,
     addNodeVisible, setAddNodeVisible,
-    flowData, setFlowData: handleSetFlowData(flowData)
+    flowData, setFlowData,
+    heightLightNodes, setHeightLightNodes
   }
 
   return <GlobalContext.Provider value={providerValue}>
@@ -182,3 +171,47 @@ const GlobalProvider: React.FC<{ data: any }> = ({ children, data }) => {
 
 export { initNodeConfig, initNodeBoxConfig, initPipelineBoxConfig, typeConfigs }
 export { GlobalContext, GlobalProvider }
+
+/**
+ * 指定位置添加节点
+ * @param source 原始数据
+ * @param path 操作路径
+ * @param node 新增节点
+ * @returns 
+ */
+function addNodeByPath(source: any, path: Array<number | string>, node: any) {
+  const k = path.shift();
+  if (typeof k === "undefined") return source;
+  if (path.length === 0) {
+    if (typeof k === "number") {
+      source = source || []
+      source.splice(k, 0, node);
+    } else {
+      source[k] = node;
+    }
+  } else {
+    source[k] = addNodeByPath(source[k], path, node);
+  }
+  return source;
+}
+
+/**
+ * 指定位置删除节点
+ * @param source 原始数据
+ * @param path 操作路径
+ * @returns 
+ */
+function deleteNodeByPath(source: any, path: Array<number | string>) {
+  const k = path.shift();
+  if (typeof k === "undefined") return source;
+  if (path.length === 0) {
+    if (typeof k === "number") {
+      source.splice(k, 1);
+    } else {
+      delete source[k];
+    }
+  } else {
+    source[k] = deleteNodeByPath(source[k], path);
+  }
+  return source;
+}
