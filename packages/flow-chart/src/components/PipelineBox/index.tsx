@@ -1,11 +1,11 @@
 import React from "react";
-import { IDictionary, INodeBoxConfig, IPipelineConfig, ISizeConfig } from "../../types";
+import { IDictionary, INodeBoxConfig, IPipelineConfig, ISizeConfig } from "@/types";
 import { NodeBox } from "../NodeBox";
 import { getUniqId } from "../../utils";
 import { DrawLine } from "../Line";
 import { AddNodeButton } from "../AddNodeButton";
-import { Point } from "../Point";
-import { GlobalContext } from "../../context";
+import { Point } from "@/uselessComponents/Point";
+import { GlobalContext } from "@/context";
 
 interface PipelineBoxProps {
   parentNodeBox?: NodeBox;

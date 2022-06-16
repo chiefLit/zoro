@@ -8,7 +8,7 @@ import {
 import { NodeBox } from "../NodeBox";
 import { DrawLine } from "../Line";
 import { getUniqId } from "../../utils";
-import { Point } from "../Point";
+import { Point } from "../../uselessComponents/Point";
 import style from "./style.module.less";
 import { CloseOutlined } from "@ant-design/icons";
 import { Button } from "antd";

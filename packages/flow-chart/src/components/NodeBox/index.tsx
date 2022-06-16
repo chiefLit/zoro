@@ -4,7 +4,7 @@ import { IDictionary, INodeBoxConfig, IPipelineConfig, ISizeConfig } from "../..
 import { DrawLine } from '../Line';
 import { PipelineBox } from '../PipelineBox';
 import { getUniqId } from '../../utils'
-import { Point } from '../Point';
+import { Point } from '../../uselessComponents/Point';
 import { AddNodeButton } from '../AddNodeButton';
 import { GlobalContext, typeConfigs } from '../../context';
 
