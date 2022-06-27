@@ -1,0 +1,21 @@
+.add-node-button {
+  position: relative;
+  width: 220px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 100px;
+    background: #a9b4cd;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%);
+    z-index: -1;
+  }
+}
