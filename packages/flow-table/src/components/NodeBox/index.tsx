@@ -2,8 +2,9 @@ import React from 'react'
 import { FlowTableData } from '@/types'
 import AddNodeButton from '../AddNodeButton'
 import { BranchBox, NodeBox } from '..'
+import NodeCard from '../NodeCard'
+import ConditionCard from '../ConditionCard'
 import './style.less'
-import { ConditionCard, NodeCard } from './components'
 
 interface NodeBoxProps {
   data: FlowTableData;

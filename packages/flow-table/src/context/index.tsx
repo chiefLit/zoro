@@ -8,11 +8,12 @@ import { getUniqId } from '@/utils';
 interface FlowContextProps {
   flowData: FlowTableData;
   nodeTypes: NodeTypeItem[];
-  findNodeByNodeId: (nodeId: string, resuceNode: FlowTableData) => FlowTableData | undefined;
   addNode: (nodeType: NodeType, father: FlowTableData) => void;
   deleteNode: (targetNode: FlowTableData) => void;
   addBranch: (targetNode: FlowTableData) => void;
   removeBranch: (targetNode: FlowTableData) => void;
+  editingNode: FlowTableData | undefined;
+  setEditingNode: React.Dispatch<React.SetStateAction<FlowTableData | undefined>>
 }
 
 const FlowContext = React.createContext({} as FlowContextProps)
@@ -44,12 +45,11 @@ const nodeTypes = [
 ]
 
 const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }> = ({ children, data }) => {
-
   const [flowData, setFlowData] = React.useState<FlowTableData>(data);
-  const [flowMap, setFlowMap] = React.useState<Record<string, FlowTableData>>()
+  const [flowMap, setFlowMap] = React.useState<Record<string, FlowTableData>>();
+  const [editingNode, setEditingNode] = React.useState<FlowTableData>()
 
   React.useEffect(() => {
-    // 一次性转map
     const fMap = linkedListToMap(flowData)
     setFlowMap(fMap)
   }, [flowData])
@@ -115,7 +115,7 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
 
   /**
    * 添加分支
-   * @param targetNode 
+   * @param targetNode 需要添加分支的节点
    */
   const addBranch = (targetNode: FlowTableData) => {
     targetNode.conditionNodes?.push({
@@ -131,7 +131,7 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
 
   /**
    * 删除分支
-   * @param targetNode 
+   * @param targetNode 需要删除的节点
    */
   const removeBranch = React.useMemo(() => (targetCondition: FlowTableData) => {
     console.log('%cindex.tsx line:136 targetCondition', 'color: #007acc;', targetCondition);
@@ -144,6 +144,10 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
     }
     setFlowData({ ...flowData })
   }, [flowData, flowMap])
+
+  const updateNodeProperties = (node: FlowTableData, newProperties: Record<string, unknown>) => {
+    
+  }
 
   // 前进
   const forward = () => { }
@@ -158,8 +162,10 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
       deleteNode,
       addBranch,
       removeBranch,
+      editingNode,
+      setEditingNode,
     }
-  }, [flowData, flowMap])
+  }, [flowData, flowMap, editingNode, setEditingNode ])
 
   return <FlowContext.Provider value={providerValue}>
     {children}

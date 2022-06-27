@@ -1,6 +1,6 @@
 import React from 'react'
 import { FlowTableData } from '@/types'
-import EditableText from '@/commonComponents/EditableText'
+import EditableText from '@/components/EditableText'
 import './style.less'
 import { Button } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
@@ -18,7 +18,7 @@ interface NodeCardProps {
 export default (props: NodeCardProps) => {
   const { data } = props;
   const [nodeData, setNodeData] = React.useState<FlowTableData>(data)
-  const {removeBranch} = React.useContext(FlowContext)
+  const { removeBranch, setEditingNode } = React.useContext(FlowContext)
 
   const hanldeChangeTitle = (title: string) => {
     setNodeData({ ...data, properties: { ...data?.properties, title } })
@@ -32,9 +32,9 @@ export default (props: NodeCardProps) => {
     <section className='node-card-wrapper condition-card-wrapper'>
       <header className='node-card-title'>
         <EditableText value={nodeData?.properties?.title} onChange={hanldeChangeTitle} disabled={true} />
-        <Button size='small' className='node-card-close-button' onClick={handleClickClose} type='primary' icon={<CloseOutlined />}/>
+        <Button size='small' className='node-card-close-button' onClick={handleClickClose} icon={<CloseOutlined />} />
       </header>
-      <article className='node-card-content'>{data?.content}</article>
+      <article className='node-card-content' onClick={() => setEditingNode(data)}>{data.nodeId}<br />{data?.content}</article>
     </section>
   )
 }

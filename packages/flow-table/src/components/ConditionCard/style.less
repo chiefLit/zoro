@@ -1,0 +1,41 @@
+.node-card-wrapper {
+  width: 220px;
+  box-shadow: 0 0 6px 0 rgb(0 0 0 / 30%);
+  background: #fff;
+  border-radius: 2px;
+  font-size: 12px;
+  position: relative;
+  &.condition-card-wrapper {
+    .node-card-title {
+      background: #fff;
+      color: #15bc83;
+    }
+  }
+  &:hover {
+    box-shadow: 0 0 0 2px #1890ff, 0 0 5px 4px rgb(0 0 0 / 20%);
+    .node-card-title {
+      .node-card-close-button {
+        display: block;
+      }
+    }
+  }
+  .node-card-title {
+    height: 30px;
+    line-height: 30px;
+    border-bottom: 1px solid #eee;
+    background: #1890ff;
+    padding: 0 5px 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .node-card-close-button {
+      display: none;
+      border: 0;
+    }
+  }
+  .node-card-content {
+    padding: 10px;
+    line-height: 16px;
+    cursor: pointer;
+  }
+}

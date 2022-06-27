@@ -2,7 +2,7 @@ import React from 'react'
 import { FlowTableData } from '@/types'
 import NodeBox from '../NodeBox';
 import AddNodeButton from '../AddNodeButton';
-import AddBranchButton from './components/AddBranchButton';
+import AddBranchButton from '../AddBranchButton';
 import './style.less'
 
 interface NodeBoxProps {
@@ -18,7 +18,7 @@ export default (props: NodeBoxProps) => {
         {
           data.conditionNodes?.map(item => {
             return <div className='row-box' key={item.nodeId}>
-              <NodeBox data={item} isInBranch />
+              <NodeBox data={item} />
               <div className='center-line' />
             </div>
           })
