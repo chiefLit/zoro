@@ -1,5 +1,5 @@
 import React from 'react'
-import { ConditionType, FlowTableData, NodeTypeItem, NodeType } from '@/types';
+import { ConditionType, FlowTableData, NodeTypeItem, NodeType, CommonProperties } from '@/types';
 import { getUniqId } from '@/utils';
 
 /**
@@ -14,6 +14,7 @@ interface FlowContextProps {
   removeBranch: (targetNode: FlowTableData) => void;
   editingNode: FlowTableData | undefined;
   setEditingNode: React.Dispatch<React.SetStateAction<FlowTableData | undefined>>
+  updateNodeProperties: (params: { node: FlowTableData, newProperties: CommonProperties & Record<string, unknown> }) => void
 }
 
 const FlowContext = React.createContext({} as FlowContextProps)
@@ -77,11 +78,18 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
       isInBranch: father.isInBranch,
       prevId: father.nodeId,
     }
-    if (nodeType === NodeType.interflow || nodeType === NodeType.condition) {
+    if (nodeType === NodeType.interflow) {
       newSon.conditionType = typeData.type as unknown as ConditionType
       newSon.conditionNodes = [
         { nodeId: getUniqId(), type: typeData.type, condition: true, properties: { title: '分支' }, isInBranch: true, prevId: newSon.nodeId },
         { nodeId: getUniqId(), type: typeData.type, condition: true, properties: { title: '分支' }, isInBranch: true, prevId: newSon.nodeId },
+      ]
+    }
+    if (nodeType === NodeType.condition) {
+      newSon.conditionType = typeData.type as unknown as ConditionType
+      newSon.conditionNodes = [
+        { nodeId: getUniqId(), type: typeData.type, condition: true, properties: { title: '条件' }, isInBranch: true, prevId: newSon.nodeId },
+        { nodeId: getUniqId(), type: typeData.type, condition: true, properties: { title: '条件' }, isInBranch: true, prevId: newSon.nodeId },
       ]
     }
     if (father.childNode) {
@@ -145,8 +153,10 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
     setFlowData({ ...flowData })
   }, [flowData, flowMap])
 
-  const updateNodeProperties = (node: FlowTableData, newProperties: Record<string, unknown>) => {
-    
+  const updateNodeProperties = (params: { node: FlowTableData, newProperties: CommonProperties & Record<string, unknown> }) => {
+    const { node, newProperties } = params
+    node.properties = newProperties
+    setFlowData({ ...flowData })
   }
 
   // 前进
@@ -164,8 +174,9 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
       removeBranch,
       editingNode,
       setEditingNode,
+      updateNodeProperties
     }
-  }, [flowData, flowMap, editingNode, setEditingNode ])
+  }, [flowData, flowMap, editingNode, setEditingNode])
 
   return <FlowContext.Provider value={providerValue}>
     {children}
