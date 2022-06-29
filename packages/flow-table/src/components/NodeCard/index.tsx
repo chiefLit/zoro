@@ -17,11 +17,10 @@ interface NodeCardProps {
  */
 export default (props: NodeCardProps) => {
   const { data, readonly } = props;
-  const [nodeData, setNodeData] = React.useState<FlowTableData>(data)
-  const { deleteNode, setEditingNode } = React.useContext(FlowContext)
+  const { deleteNode, setEditingNode, updateNodeProperties } = React.useContext(FlowContext)
 
   const hanldeChangeTitle = (title: string) => {
-    setNodeData({ ...data, properties: { ...data?.properties, title } })
+    updateNodeProperties({ node: data, newProperties: { ...data?.properties, title } })
   }
 
   const handleClose = () => {
