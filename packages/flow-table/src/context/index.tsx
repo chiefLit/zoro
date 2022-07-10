@@ -1,6 +1,7 @@
 import React from 'react'
-import { ConditionType, FlowTableData, NodeTypeItem, NodeType, CommonProperties } from '@/types';
+import { ConditionType, FlowTableData, NodeTypeItem, NodeType, CommonProperties, FlowTableProps } from '@/types';
 import { getUniqId } from '@/utils';
+import { message } from 'antd';
 
 /**
  * 流程相关的状态管理
@@ -8,13 +9,26 @@ import { getUniqId } from '@/utils';
 interface FlowContextProps {
   flowData: FlowTableData;
   nodeTypes: NodeTypeItem[];
-  addNode: (nodeType: NodeType, father: FlowTableData) => void;
-  deleteNode: (targetNode: FlowTableData) => void;
-  addBranch: (targetNode: FlowTableData) => void;
-  removeBranch: (targetNode: FlowTableData) => void;
+  /**
+   * 点击添加节点按钮事件，如果绑定该事件默认的逻辑将不执行。
+   */
+  onAddNode: (params: { previousNode: FlowTableData, nodeType: NodeType }) => void;
+  /**
+   * 点击删除节点按钮事件，如果绑定该事件默认的逻辑将不执行。
+   */
+  onDeleteNode: (params: { targetNode: FlowTableData }) => void;
+  /**
+   * 点击添加分支按钮事件，如果绑定该事件默认的逻辑将不执行。
+   */
+  onAddBranch: (params: { targetNode: FlowTableData }) => void;
+  /**
+   * 点击删除分支按钮事件，如果绑定该事件默认的逻辑将不执行。
+   */
+  onDeleteBranch: (params: { targetBranch: FlowTableData }) => void;
   editingNode: FlowTableData | undefined;
   setEditingNode: React.Dispatch<React.SetStateAction<FlowTableData | undefined>>
-  updateNodeProperties: (params: { node: FlowTableData, newProperties: CommonProperties & Record<string, unknown> }) => void
+  updateNodeProperties: (params: { targetNode: FlowTableData, newProperties: CommonProperties & Record<string, unknown> }) => void
+  getNodeById: (id: string) => FlowTableData
 }
 
 const FlowContext = React.createContext({} as FlowContextProps)
@@ -40,19 +54,24 @@ const linkedListToMap = (data: FlowTableData) => {
 
 const nodeTypes = [
   { title: '普通节点', type: NodeType.normal },
-  { title: '子流程', type: NodeType.subflow },
   { title: '条件分支', type: NodeType.condition },
   { title: '分流合流', type: NodeType.interflow }
 ]
 
-const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }> = ({ children, data }) => {
-  const [flowData, setFlowData] = React.useState<FlowTableData>(data);
+interface FlowProviderProps extends FlowTableProps {
+  children: React.ReactNode;
+}
+
+const FlowProvider: React.FC<FlowProviderProps> = (props) => {
+  const { children, value, ...events } = props
+  const [flowData, setFlowData] = React.useState<FlowTableData>(value);
   const [flowMap, setFlowMap] = React.useState<Record<string, FlowTableData>>();
   const [editingNode, setEditingNode] = React.useState<FlowTableData>()
 
   React.useEffect(() => {
     const fMap = linkedListToMap(flowData)
     setFlowMap(fMap)
+    events.onChange?.(flowData)
   }, [flowData])
 
   /**
@@ -60,7 +79,9 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
    * @param newSon 新增节点
    * @param father 目标节点
    */
-  const addNode = React.useMemo(() => (nodeType: NodeType, father: FlowTableData) => {
+  const onAddNode = React.useMemo(() => (params: { previousNode: FlowTableData, nodeType: NodeType }) => {
+    const { previousNode, nodeType } = params
+    events.beforeAddNode?.({ previousNode, nodeType })
     const typeData = nodeTypes.find(item => item.type === nodeType)
 
     if (!typeData) {
@@ -74,9 +95,9 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
       properties: {
         title: typeData.title
       },
-      childNode: father.childNode,
-      isInBranch: father.isInBranch,
-      prevId: father.nodeId,
+      childNode: previousNode.childNode,
+      isInBranch: previousNode.isInBranch,
+      prevId: previousNode.nodeId,
     }
     if (nodeType === NodeType.interflow) {
       newSon.conditionType = typeData.type as unknown as ConditionType
@@ -92,11 +113,12 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
         { nodeId: getUniqId(), type: typeData.type, condition: true, properties: { title: '条件' }, isInBranch: true, prevId: newSon.nodeId },
       ]
     }
-    if (father.childNode) {
-      father.childNode.prevId = newSon.nodeId
+    if (previousNode.childNode) {
+      previousNode.childNode.prevId = newSon.nodeId
     }
-    father.childNode = newSon;
+    previousNode.childNode = newSon;
     setFlowData({ ...flowData })
+    events.afterAddNode?.({ previousNode, targetNode: newSon })
   }, [flowData])
 
 
@@ -104,59 +126,70 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
    * 删除节点
    * @param targetNode 待删除的节点
    */
-  const deleteNode = React.useMemo(() => (targetNode: FlowTableData) => {
-    console.log('%cindex.tsx line:100 targetNode', 'color: #007acc;', targetNode);
+  const onDeleteNode = React.useMemo(() => ({ targetNode }: { targetNode: FlowTableData }) => {
+    events.beforeDeleteNode?.({ targetNode })
     if (!flowMap || !targetNode.prevId) return
     if (targetNode.nodeId === flowData.nodeId) {
       console.error('不能删除起始节点')
       return
     }
-    const fatherNode = flowMap[targetNode.prevId]
+    const previousNode = flowMap[targetNode.prevId]
     if (targetNode.childNode?.nodeId) {
-      targetNode.childNode.prevId = fatherNode?.nodeId;
-      fatherNode.childNode = targetNode.childNode;
+      targetNode.childNode.prevId = previousNode?.nodeId;
+      previousNode.childNode = targetNode.childNode;
     } else {
-      fatherNode.childNode = undefined
+      previousNode.childNode = undefined
     }
     setFlowData({ ...flowData })
+    events.afterDeleteNode?.({ targetNode })
   }, [flowData, flowMap])
 
   /**
    * 添加分支
    * @param targetNode 需要添加分支的节点
    */
-  const addBranch = (targetNode: FlowTableData) => {
+  const onAddBranch = ({ targetNode }: { targetNode: FlowTableData }) => {
+    events.beforeAddBranch?.({ targetNode })
     targetNode.conditionNodes?.push({
       nodeId: getUniqId(),
       type: targetNode.type,
       condition: true,
-      properties: { title: '分支' },
+      properties: { title: targetNode.type === NodeType.interflow ? '分支' : '条件' },
       isInBranch: true,
       prevId: targetNode.nodeId
     })
     setFlowData({ ...flowData })
+    events.afterAddBranch?.({ targetNode })
   }
 
   /**
    * 删除分支
    * @param targetNode 需要删除的节点
    */
-  const removeBranch = React.useMemo(() => (targetCondition: FlowTableData) => {
-    console.log('%cindex.tsx line:136 targetCondition', 'color: #007acc;', targetCondition);
-    if (!flowMap || !targetCondition.prevId) return
-    const father = flowMap[targetCondition.prevId]
-    if (father.conditionNodes?.length! > 2) {
-      father.conditionNodes = father.conditionNodes?.filter(item => item.nodeId !== targetCondition.nodeId)
+  const onDeleteBranch = React.useMemo(() => ({ targetBranch }: { targetBranch: FlowTableData }) => {
+    events.beforeDeleteBranch?.({ targetBranch })
+    if (!flowMap || !targetBranch.prevId) return
+    const previousNode = flowMap[targetBranch.prevId]
+    if (previousNode.conditionNodes?.length! > 2) {
+      previousNode.conditionNodes = previousNode.conditionNodes?.filter(item => item.nodeId !== targetBranch.nodeId)
     } else {
-      deleteNode(father)
+      onDeleteNode({ targetNode: previousNode })
     }
     setFlowData({ ...flowData })
+    events.afterDeleteBranch?.({ targetBranch })
   }, [flowData, flowMap])
 
-  const updateNodeProperties = (params: { node: FlowTableData, newProperties: CommonProperties & Record<string, unknown> }) => {
-    const { node, newProperties } = params
-    node.properties = newProperties
+  const updateNodeProperties = (params: { targetNode: FlowTableData, newProperties: CommonProperties & Record<string, unknown> }) => {
+    const { targetNode, newProperties } = params
+    targetNode.properties = newProperties
     setFlowData({ ...flowData })
+  }
+
+  const getNodeById = (id: string) => {
+    if (!flowMap || !id) return
+    const node = flowMap[id]
+    if (!node) message.error(`未找到ID为 ${id} 的节点`);
+    return node
   }
 
   // 前进
@@ -168,13 +201,14 @@ const FlowProvider: React.FC<{ children: React.ReactNode; data: FlowTableData }>
     return {
       flowData,
       nodeTypes,
-      addNode,
-      deleteNode,
-      addBranch,
-      removeBranch,
+      onAddNode: events.onAddNode || onAddNode,
+      onDeleteNode: events.onDeleteNode || onDeleteNode,
+      onAddBranch: events.onAddBranch || onAddBranch,
+      onDeleteBranch: events.onDeleteBranch || onDeleteBranch,
       editingNode,
       setEditingNode,
-      updateNodeProperties
+      updateNodeProperties,
+      getNodeById
     }
   }, [flowData, flowMap, editingNode, setEditingNode])
 

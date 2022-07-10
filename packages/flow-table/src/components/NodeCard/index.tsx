@@ -18,14 +18,14 @@ interface NodeCardProps {
 export default (props: NodeCardProps) => {
   const { data, readonly } = props;
   const [nodeData, setNodeData] = React.useState<FlowTableData>(data)
-  const { deleteNode, setEditingNode } = React.useContext(FlowContext)
+  const { onDeleteNode, setEditingNode } = React.useContext(FlowContext)
 
   const hanldeChangeTitle = (title: string) => {
     setNodeData({ ...data, properties: { ...data?.properties, title } })
   }
 
   const handleClose = () => {
-    deleteNode(data)
+    onDeleteNode?.({ targetNode: data })
   }
 
   return (
@@ -34,7 +34,7 @@ export default (props: NodeCardProps) => {
         <EditableText value={data?.properties?.title} onChange={hanldeChangeTitle} disabled={readonly} />
         <Button size='small' className='node-card-close-button' onClick={handleClose} type='primary' icon={<CloseOutlined />} />
       </header>
-      <article className='node-card-content' onClick={() => setEditingNode(data)}>{data.nodeId}<br/>{data?.content}</article>
+      <article className='node-card-content' onClick={() => setEditingNode(data)}>{data.nodeId}<br />{data?.content}</article>
     </section>
   )
 }

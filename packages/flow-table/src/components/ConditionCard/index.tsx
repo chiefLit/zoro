@@ -18,14 +18,14 @@ interface NodeCardProps {
 export default (props: NodeCardProps) => {
   const { data } = props;
   const [nodeData, setNodeData] = React.useState<FlowTableData>(data)
-  const { removeBranch, setEditingNode } = React.useContext(FlowContext)
+  const { onDeleteBranch, setEditingNode } = React.useContext(FlowContext)
 
   const hanldeChangeTitle = (title: string) => {
     setNodeData({ ...data, properties: { ...data?.properties, title } })
   }
 
   const handleClickClose = () => {
-    removeBranch(data)
+    onDeleteBranch?.({ targetBranch: data })
   }
 
   return (
