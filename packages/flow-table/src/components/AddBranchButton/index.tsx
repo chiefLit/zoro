@@ -10,11 +10,11 @@ interface AddBranchButtonProps {
 
 export default (props: AddBranchButtonProps) => {
   const { data } = props;
-  const { addBranch } = React.useContext(FlowContext)
+  const { onAddBranch } = React.useContext(FlowContext)
 
 
   const handleClick = () => {
-    addBranch(data)
+    onAddBranch?.({ targetNode: data })
   }
 
   return (

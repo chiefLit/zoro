@@ -21,7 +21,7 @@ const PropertiesDrawer: React.FC<PropertiesDrawerProps> = (props) => {
   }
 
   const handleSubmit = () => {
-    updateNodeProperties({ node: editingNode, newProperties: properties })
+    updateNodeProperties({ targetNode: editingNode, newProperties: properties })
     setEditingNode(undefined)
   }
 

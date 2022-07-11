@@ -11,11 +11,11 @@ interface NodeBoxProps {
 
 export default (props: NodeBoxProps) => {
   const { data } = props;
-  const { addNode, nodeTypes } = React.useContext(FlowContext)
+  const { onAddNode, nodeTypes } = React.useContext(FlowContext)
 
 
   const handleClick = (typeData: NodeTypeItem) => {
-    addNode(typeData.type, data)
+    onAddNode?.({ nodeType: typeData.type, previousNode: data })
   }
 
   const content = nodeTypes?.map((nodeType, index) => {
